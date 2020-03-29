@@ -1,4 +1,6 @@
-title: "Remote theme example"
+title: "Covid simullation"
+description: "Documentation for the covid simulation developed by the IDAS team."
+baseurl: ""
 remote_theme: pmarsceill/just-the-docs
-color_scheme: "dark"
-search_enabled: false
+plugins:
+  - jekyll-remote-theme
