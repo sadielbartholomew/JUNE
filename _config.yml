@@ -1,6 +1,8 @@
 title: "Covid simullation"
 description: "Documentation for the covid simulation developed by the IDAS team."
 baseurl: ""
+baseurl: "https://josephpb.github.io"
+url: "/covidmodelling"
 remote_theme: pmarsceill/just-the-docs
 plugins:
   - jekyll-remote-theme
