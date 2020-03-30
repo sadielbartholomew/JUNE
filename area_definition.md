@@ -12,5 +12,9 @@ We use datasets extracted from Census information recorded in 2011 and managed b
 The dataset is subdivided in different type of areas, from which these seem to be the most relevant to us
 
 - Postcode Sectors, correspond to the first four characters of the postcode (e.g. DH1 1)
+
+<img src="images/postcode_count.png" alt="Kitten"
+	title="Distribution of residents per postcode sector" width="400" height="400" align="middle" />
+
 - Output Areas, are the smallest geographic unit for which outputs are published (can only download them buy region).
 
