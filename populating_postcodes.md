@@ -36,6 +36,6 @@ Given these datasets we populate all postcode sectors with Person instances by m
 <img src="images/overall_ages.png" alt="Kitten"
 	title="Total number of residents in given age range" width="400" height="400" align="middle" />
 
-<img src="images/ages_postcode.png" alt="Kitten"
+<img src="images/ages_postcodes.png" alt="Kitten"
 	title="Distribution of residents per postcode sector per age category" width="400" height="400" align="middle" />
 
