@@ -39,3 +39,6 @@ Given these datasets we populate all postcode sectors with Person instances by m
 <img src="images/ages_postcodes.png" alt="Kitten"
 	title="Distribution of residents per postcode sector per age category" width="400" height="400" align="middle" />
 
+<img src="images/age_dist.png" alt="Kitten"
+	title="England and Wales age distribution per postcode. Comparison between census data and distribution after people allocation." width="400" height="400" align="middle" />
+
