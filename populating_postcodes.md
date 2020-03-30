@@ -2,7 +2,7 @@
 layout: default
 title: Populating postcodes with realistic household characteristics
 has_children: true
-nav_order: 3
+nav_order: 4
 ---
 
 Populating postcode sectors with realistic household characteristics
