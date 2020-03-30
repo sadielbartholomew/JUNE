@@ -31,4 +31,11 @@ We have populated postcode sectors with households that have realistic age compo
 
 - [LC1402EW](https://www.nomisweb.co.uk/census/2011/lc1402ew), classifies households by household composition and by number of bedrooms. We use this information to generate realistic households by postcode sector assuming that, i) Families in which all members are over 65's, are composed of couples, ii) Lone parents with one or two bedrooms only have one child, iii) Lone parents with three or more bedrooms only have two children, iv) Families classified as others count as young adults with no children.
 
-Given these datasets we populate all postcode sectors with Person instances by matching the postcode sector observations in terms of sex, age and household composition.
+Given these datasets we populate all postcode sectors with Person instances by matching the postcode sector observations in terms of sex, age and household composition. See figures below to check results,
+
+<img src="images/overall_ages.png" alt="Kitten"
+	title="Total number of residents in given age range" width="400" height="400" align="middle" />
+
+<img src="images/ages_postcode.png" alt="Kitten"
+	title="Distribution of residents per postcode sector per age category" width="400" height="400" align="middle" />
+
