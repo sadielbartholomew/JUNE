@@ -11,7 +11,7 @@ Populating schools
 
 We use data from [school data](https://www.gov.uk/school-performance-tables) to find the location of schools, the number of pupils they have, and the age range of their pupils. 
 
-To populate schools with children, we iterate over all children in an output area and assign them the closest school with vacancies in their age range, from the N-closest schools (N being 10 for now). We make the following assumptions,
+To populate schools with children, we iterate over all children in an output area and assign them the closest school with vacancies in their age range, from the N-closest schools (N being 6 for now). We make the following assumptions,
 
 - The location of the child is considered to be the location of the output area (obtained from data/geographical_data/oa_coorindates.csv). 
 
