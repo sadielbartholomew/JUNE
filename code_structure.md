@@ -18,5 +18,5 @@ Given that the code will very likely be ported to C/C++, all attributes of the c
 
 
 
-The class diagram can be found at https://drive.google.com/file/d/1YMUAePtUvx1xLVObjnz1n5IkDfJOkmD8/view
+The class diagram can be found at [Class Diagram](https://drive.google.com/file/d/1YMUAePtUvx1xLVObjnz1n5IkDfJOkmD8/view)
 

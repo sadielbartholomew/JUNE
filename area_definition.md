@@ -20,4 +20,4 @@ The dataset is subdivided in different type of areas, from which these seem to b
 
 
 
-Mapping between different geographies can be found at data/geographical_data/ . The file was downloaded from http://geoportal.statistics.gov.uk/datasets/80628f9289574ba4b39a76ca7830b7e9_0 .
+Mapping between different geographies can be found at data/geographical_data/, the file was downloaded from [Mapping](http://geoportal.statistics.gov.uk/datasets/80628f9289574ba4b39a76ca7830b7e9_0).
