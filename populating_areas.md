@@ -8,7 +8,9 @@ nav_order: 4
 Populating output areas with realistic household characteristics
 ========
 We have populated output areas with households that have realistic age compositions, using the following datasets extracted from Nomis,
-- [KS102EW](https://www.nomisweb.co.uk/census/2011/ks102ew), classifies the usual resident population by sex and age. The age intervals given are:
+- [KS101EW](https://www.nomisweb.co.uk/census/2011/ks101ew), classifies the usual resident population by sex. We use it to extract the number of residents by output area, and the sex composition.
+- [KS102EW](https://www.nomisweb.co.uk/census/2011/ks102ew), classifies the usual resident population by age. The age intervals given are:
+
 
     + Age 0 to 4
     - Age 5 to 7
@@ -29,13 +31,7 @@ We have populated output areas with households that have realistic age compositi
 
 Given these datasets we populate all output areas with Person instances by matching the output area observations in terms of sex and age composition. See figures below to check results.
 
-<img src="images/overall_ages.png" alt="Kitten"
+<img src="images/ages_oa.png" alt="Kitten"
 	title="Total number of residents in given age range" width="400" height="400" align="middle" />
-
-<img src="images/ages_postcodes.png" alt="Kitten"
-	title="Distribution of residents per postcode sector per age category" width="400" height="400" align="middle" />
-
-<img src="images/age_dist.png" alt="Kitten"
-	title="England and Wales age distribution per postcode. Comparison between census data and distribution after people allocation." width="700" height="700" align="middle" />
 
 
