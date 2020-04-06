@@ -2,8 +2,7 @@
 layout: default
 title: Populating schools
 has_children: false
-nav_order: 5
-
+nav_order: 6
 ---
 
 Populating schools
