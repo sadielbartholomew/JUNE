@@ -22,12 +22,12 @@ To populate schools with children, we iterate over all children in an output are
 Below, we show that the distribution of school sizes is still closely matched,
 
 <img src="images/school_size.png" alt="Kitten"
-	title="Number of schools with a given size" width="500" height="400" align="middle" />
+	title="Number of schools with a given size" width="300" height="250" align="middle" />
 
 Moreover, we can compute the distance children have to travel to go to school. The results can be seen below,
 
 <img src="images/distance2school.png" alt="Kitten"
-	title="Distance travelled to school" width="500" height="400" align="middle" />
+	title="Distance travelled to school" width="300" height="250" align="middle" />
 
 The mean distance travelled to school is close to the national average (see summary data from 2014 here [school survey](https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/476635/travel-to-school.pdf)). Moreover, we also find older students tend to travel further away.
 

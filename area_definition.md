@@ -14,7 +14,7 @@ The dataset is subdivided in different type of areas, from which these seem to b
 - Output Areas, are the smallest geographic unit for which outputs are published (can only download them by region). For now, we are only working with North East Output Areas,
 
 <img src="images/residents_output_area.png" alt="Kitten"
-	title="Distribution of residents per postcode sector" width="500" height="400" align="middle" />
+	title="Distribution of residents per output area" width="300" height="200" align="middle" />
 
 - MOAs
 
