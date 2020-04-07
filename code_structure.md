@@ -2,7 +2,7 @@
 layout: default
 title: Code structure
 nav_order: 2
-has_children: true
+has_children: false 
 ---
 
 The code follows the guidelines described [here](https://yt-project.org/doc/developing/developing.html#code-style-guide).
