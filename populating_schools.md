@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Populating schools
-has_children: false
-nav_order: 6
+parent: Creating a digital twin of the UK
+nav_order: 5
 ---
 
 Populating schools

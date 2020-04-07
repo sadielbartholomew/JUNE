@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Populating output with realistic household characteristics
-has_children: true
-nav_order: 4
+parent: Creating a digital twin of the UK
+nav_order: 3
 ---
 
 Populating output areas with realistic people

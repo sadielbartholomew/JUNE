@@ -1,8 +1,8 @@
 ---
 layout: default
 title: Populating schools
-has_children: false
-nav_order: 5
+parent: Creating a digital twin of the UK
+nav_order: 4
 ---
 Populating output areas with realistic household characteristics
 ========
@@ -59,4 +59,9 @@ The algorithm that it is used to allocate pople in houses is found in the ``dist
 <img src="images/overall_household_composition.png" alt="Kitten"
 	title="Total number of households with a given composition" width="400" height="400" align="middle" />
 
+
+In the future, we will work on the following improvements,
+- Add families with more than three kids (following Poisson dist).
+- Create more households with only adults.
+- Match the age of couples (as it is now, the worst case scenario is a 25 year old with a 65, and a 65 with a 99).
 
