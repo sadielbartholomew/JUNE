@@ -1,10 +1,10 @@
 ---
 layout: default
-title: Populating schools
+title: Creating realistic households
 parent: Creating a digital twin of the UK
 nav_order: 4
 ---
-Populating output areas with realistic household characteristics
+Creating realistic households
 ========
 Given a household configuration, we use the encoding
 

@@ -1,11 +1,11 @@
 ---
 layout: default
-title: Populating output with realistic household characteristics
+title: Populating output areas with people
 parent: Creating a digital twin of the UK
 nav_order: 3
 ---
 
-Populating output areas with realistic people
+Populating output areas with people
 ========
 We have populated output areas with households that have realistic age compositions, using the following datasets extracted from Nomis,
 - [KS101EW](https://www.nomisweb.co.uk/census/2011/ks101ew), classifies the usual resident population by sex. We use it to extract the number of residents by output area, and the sex composition.
