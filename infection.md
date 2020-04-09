@@ -1,9 +1,12 @@
 ---
 layout: default
 title: Simulating an individual infection
-parent: Infection Modelling
 nav_order: 4
+has_children: true
 ---
+
+# Simulating an individual infection
+
 Our infection model is encoded in the class "Infection" and assumes that any individual infection is described by two potentially time-dependent characeristics, given as numbers, namely
 
 - the probability to transmit the infection, and

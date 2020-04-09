@@ -2,8 +2,9 @@
 layout: default
 title: Transmission Probability
 parent: Simulating an individual infection
-nav_order: 5
+nav_order: 6
 ---
+
 1. TransmissionSI
 This model reproduces the assumptions of the SI model, namely that upon infection people will continue to infect others with a probability given by "Transmission:Probability".  There is no intrinsic cut-off or modulation to that model.
 
