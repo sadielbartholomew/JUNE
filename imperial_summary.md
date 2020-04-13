@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Quick summary of Imperial transmission model
-nav_order: 4
+nav_order: 9
 mathjax: true
 has_children: false
 ---
@@ -13,10 +13,7 @@ The model is a stochastic individual based simulation with spatial structure. In
 Each susceptible individual $$i$$ has a probability $$P_{i} = 1 - \exp{(-\lambda_{i}\Delta T)}$$ of being infected at each timestep $$\Delta T = 0.25$$ days, where $$\lambda_{i}$$ is the instantaneous infection risk [1]. $$\lambda_{i}$$ contains the information about the interactions occurring in different groups and is split up into three terms. [2] claims that approximately one third of transmissions occurs in  the household, one third in schools and workplaces, and one third in the community.
 
 \begin{align}
-\lambda_{i} &= \lambda_{i, \text{home}} + \lambda_{i, \text{place}} + \lambda_{i, \text{community}} \\
-\lambda_{i, \text{home}} &= \sum_{k} \dfrac{I_{k}\beta_{h}\kappa{(t-\tau_{k})}\rho_{k}\left[1+C_{k}(\omega - 1)\right]}{n_{i}^{\alpha}} \\ 
-\lambda_{i, \text{place}} &= \sum_{k} \dfrac{I_{k}\beta_{p}\kappa{(t-\tau_{k})}\rho_{k}\left[1+C_{k}(\omega \psi_{p}(t-\tau_{k})-1)\right]}{m_{i, \text{place}}} \\
-\lambda_{i, \text{community}} &= \sum_{k} \dfrac{I_{k}\xi{(a_{i})}\beta_{c}\kappa{(t-\tau_{k})}\rho_{k}f(d_{i,k})\left[1+C_{k}(\omega - 1)\right]}{\sum_{k}f(d_{i,k})}
+\lambda_{i} &= \lambda_{i, \text{home}} + \lambda_{i, \text{place}} + \lambda_{i, \text{community}} \\\\ \lambda_{i, \text{home}} &= \sum_{k} \dfrac{I_{k}\beta_{h}\kappa{(t-\tau_{k})}\rho_{k}\left[1+C_{k}(\omega - 1)\right]}{n_{i}^{\alpha}} \\\\ \lambda_{i, \text{place}} &= \sum_{k} \dfrac{I_{k}\beta_{p}\kappa{(t-\tau_{k})}\rho_{k}\left[1+C_{k}(\omega \psi_{p}(t-\tau_{k})-1)\right]}{m_{i, \text{place}}} \\\\ \lambda_{i, \text{community}} &= \sum_{k} \dfrac{I_{k}\xi{(a_{i})}\beta_{c}\kappa{(t-\tau_{k})}\rho_{k}f(d_{i,k})\left[1+C_{k}(\omega - 1)\right]}{\sum_{k}f(d_{i,k})}
 \end{align}
 
 Brief descriptions of each term:
