@@ -4,9 +4,9 @@ from enum import IntEnum, Enum
 import struct
 from recordclass import dataobject
 import numpy as np
+import numba as nb
 from june.infection.health_information import HealthInformation
 from june.commute import ModeOfTransport
-
 
 
 class Activities(dataobject):
@@ -141,9 +141,9 @@ class Person(dataobject):
             return None
         guardian = random.choice(possible_guardians)
         if (
-            (guardian.health_information is not None and guardian.health_information.should_be_in_hospital)
-            or guardian.dead
-        ):
+            guardian.health_information is not None
+            and guardian.health_information.should_be_in_hospital
+        ) or guardian.dead:
             return None
         else:
             return guardian
