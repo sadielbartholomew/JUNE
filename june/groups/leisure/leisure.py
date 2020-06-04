@@ -138,6 +138,7 @@ class Leisure:
                     social_venue.add(mate, activity="leisure")  # ignores size checking
             return True
 
+    #@profile
     def get_subgroup_for_person_and_housemates(
         self, person: Person, delta_time: float, is_weekend: bool
     ):

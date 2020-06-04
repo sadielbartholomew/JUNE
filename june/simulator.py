@@ -517,28 +517,14 @@ class Simulator:
                 n_people += len(cemetery.people)
         sim_logger.info(f"number of deaths =  {n_people}")
         infected_ids = []
-        infected_ids += self.interaction.time_step(
-            self.timer.duration,
-            [group for group_type in group_instances for group in group_type.members],
-        )
-        # for group_type in group_instances:
-        # for group in group_type.members:
-        # func = partial(interaction_time_step, self.interaction, self.timer.duration)
-        # p.map(func, group_type.members)
-        # infected_ids += self.interaction.time_step(
-        #    self.timer.duration, group, self.logger,
-        # )
-        # self.interaction.time_step(self.timer.now, self.timer.shift_duration, group, self.logger)
-        # n_people += group.size
+        for group_type in group_instances:
+            for group in group_type.members:
+                if group.must_timestep:
+                    infected_ids += self.interaction.time_step(self.timer.duration, group)
         people_to_infect = [self.world.people[idx] for idx in infected_ids]
         sim_logger.info(f"new infections =  {len(people_to_infect)}")
         for person in people_to_infect:
             self.selector.infect_person_at_time(person, self.timer.now)
-        # if n_people != len(self.world.people.members):
-        #    raise SimulatorError(
-        #        f"Number of people active {n_people} does not match "
-        #        f"the total people number {len(self.world.people.members)}"
-        #    )
         self.update_health_status(self.timer.now, self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)

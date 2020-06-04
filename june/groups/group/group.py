@@ -1,6 +1,7 @@
 import logging
 import re
 import functools
+import numba as nb
 import numpy as np
 from collections import defaultdict
 from enum import IntEnum
@@ -15,7 +16,8 @@ from .subgroup import Subgroup
 logger = logging.getLogger(__name__)
 
 
-class Group(AbstractGroup):
+# class Group(AbstractGroup):
+class Group:
     """
     A group of people enjoying social interactions.  It contains three lists,
     all people in the group, the healthy ones and the infected ones (we may
@@ -44,8 +46,7 @@ class Group(AbstractGroup):
 
         default = 0
 
-    #__slots__ = ("id", "subgroups", "spec", "size", "contact_matrices")
-    __slots__ = ("id", "subgroups", "spec")
+    __slots__ = ("id", "subgroups", "spec", "size", "contact_matrices")
 
     __id_generators = defaultdict(count)
 
@@ -66,9 +67,13 @@ class Group(AbstractGroup):
         """
         self.id = self._next_id()
         self.spec = self.get_spec()
-        #self.size = 0
+        self.size = 0
         # noinspection PyTypeChecker
         self.subgroups = [Subgroup(self, i) for i in range(len(self.SubgroupType))]
+        self.contact_matrices = {
+            "contacts": np.array([[1]]),
+            "proportion_physical": np.array([[0]]),
+        }
 
     @property
     def name(self) -> str:
@@ -185,22 +190,40 @@ class Group(AbstractGroup):
         return self._collate_from_subgroups("dead")
 
     @property
-    def must_timestep(self):
-        return self.size_infected > 1 and self.size_susceptible > 1 and self.size > 1 
-
-    @property
     def size_infected(self):
-        return len(self.infected)
+        return np.sum([subgroup.size_infected for subgroup in self.subgroups])
 
     @property
     def size_recovered(self):
-        return len(self.recovered)
+        return np.sum([subgroup.size_recovered for subgroup in self.subgroups])
 
     @property
     def size_susceptible(self):
-        return len(self.susceptible)
+        return np.sum([subgroup.size_susceptible for subgroup in self.subgroups])
+
+# used in simulator
+    @property
+    def susceptible_ids(self):
+        return np.array([np.array(subgroup.susceptible_ids) for subgroup in self.subgroups if subgroup.size_susceptible > 0])
+
+    @property
+    def infector_ids(self):
+        return np.array([np.array(subgroup.infector_ids) for subgroup in self.subgroups])
+
+    @property
+    def transmission_probabilities(self):
+        return np.array([sum(subgroup.transmission_probabilities) for subgroup in self.subgroups])
+
+    @property
+    def infector_subgroup_sizes(self):
+        return np.array([subgroup.size for subgroup in self.subgroups if subgroup])
+
+    @property
+    def must_timestep(self):
+        return self.size > 1 and self.size_infected > 0 and self.size_susceptible > 0
+
 
     def clear(self):
         for subgroup in self.subgroups:
             subgroup.clear()
-        #self.size = 0
+        self.size = 0
