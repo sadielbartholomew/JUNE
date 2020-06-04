@@ -154,6 +154,8 @@ class ContactAveraging(Interaction):
             subgroup_size = len(infecters_subgroup)
         if susceptibles_subgroup == infecters_subgroup:
             subgroup_size -= 1
+            if subgroup_size == 0:
+                return 0
         susceptibles_idx = susceptibles_subgroup.subgroup_type
         infecters_idx = infecters_subgroup.subgroup_type
         if susceptibles_subgroup.group.spec == "school":
@@ -174,11 +176,11 @@ class ContactAveraging(Interaction):
             idx = school_years[idx - 1] + 1
         return idx
 
+    # @profile
     def compute_effective_transmission(
         self,
         contact_matrix,
         subgroup_transmission_probabilities,
-        susceptibilities: np.array,
         susceptibles_subgroup: "Subgroup",
         group: "Group",
         delta_time: float,
@@ -211,11 +213,11 @@ class ContactAveraging(Interaction):
                 )
         return poisson_probability(
             delta_time=delta_time,
-            susceptibilities=susceptibilities,
             beta=self.beta[group.spec],
             transmission_exponent=transmission_exponent,
         )
 
+    # @profile
     def single_time_step_for_subgroup(
         self,
         contact_matrix,
@@ -250,7 +252,7 @@ class ContactAveraging(Interaction):
         )
         should_be_infected = np.random.rand(len(susceptibles))
         for i, (recipient, luck) in enumerate(zip(susceptibles, should_be_infected)):
-            if luck < transmission_probability[i]:
+            if luck < transmission_probability:
                 self.selector.infect_person_at_time(person=recipient, time=time)
                 try:
                     logger.accumulate_infection_location(group.spec)
@@ -260,6 +262,7 @@ class ContactAveraging(Interaction):
                         group.infected, subgroup_transmission_probabilities
                 )
 
+    # @profile
     def single_time_step_for_group(
         self, group: "Group", time: float, delta_time: float, logger: "Logger",
     ):

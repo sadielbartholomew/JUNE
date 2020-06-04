@@ -3,6 +3,7 @@ import random
 from june import paths
 from typing import List, Optional
 import datetime
+from functools import partial
 
 from itertools import chain
 import numpy as np
@@ -31,6 +32,11 @@ sim_logger = logging.getLogger(__name__)
 
 class SimulatorError(BaseException):
     pass
+
+
+def interaction_time_step(interaction, duration, group):
+    infected_ids = interaction.time_step(duration, group)
+    return infected_ids
 
 
 class Simulator:
@@ -293,7 +299,7 @@ class Simulator:
         -------
         Subgroup to which person has to go, given the hierarchy of activities
         """
-    #    activities = self.apply_activity_hierarchy(activities)
+        #    activities = self.apply_activity_hierarchy(activities)
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
@@ -360,7 +366,7 @@ class Simulator:
         activities:
             list of activities that take place at a given time step
         """
-        #activities = self.apply_activity_hierarchy(activities)
+        # activities = self.apply_activity_hierarchy(activities)
         if person.age < self.min_age_home_alone:
             self.move_mild_kid_guardian_to_household(person, activities)
         elif random.random() <= self.stay_at_home_complacency:
@@ -477,13 +483,16 @@ class Simulator:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
+
     def do_timestep(self):
         """
         Perform a time step in the simulation
 
         """
         activities = self.timer.activities
-        sim_logger.info(f"time step at day {self.timer.now}, duration {self.timer.duration}")
+        sim_logger.info(
+            f"time step at day {self.timer.now}, duration {self.timer.duration}"
+        )
 
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
@@ -508,22 +517,28 @@ class Simulator:
                 n_people += len(cemetery.people)
         sim_logger.info(f"number of deaths =  {n_people}")
         infected_ids = []
-        for group_type in group_instances:
-            for group in group_type.members:
-                #infected_ids += self.interaction.time_step(
-                #    self.timer.duration, group, self.logger,
-                #)
-                self.interaction.time_step(self.timer.now, self.timer.shift_duration, group, self.logger)
-                n_people += group.size
-        #people_to_infect = [self.world.people[idx] for idx in infected_ids]
-        #sim_logger.info(f"new infections =  {len(people_to_infect)}")
-        #for person in people_to_infect:
-        #    self.selector.infect_person_at_time(person, self.timer.now)
-        if n_people != len(self.world.people.members):
-            raise SimulatorError(
-                f"Number of people active {n_people} does not match "
-                f"the total people number {len(self.world.people.members)}"
-            )
+        infected_ids += self.interaction.time_step(
+            self.timer.duration,
+            [group for group_type in group_instances for group in group_type.members],
+        )
+        # for group_type in group_instances:
+        # for group in group_type.members:
+        # func = partial(interaction_time_step, self.interaction, self.timer.duration)
+        # p.map(func, group_type.members)
+        # infected_ids += self.interaction.time_step(
+        #    self.timer.duration, group, self.logger,
+        # )
+        # self.interaction.time_step(self.timer.now, self.timer.shift_duration, group, self.logger)
+        # n_people += group.size
+        people_to_infect = [self.world.people[idx] for idx in infected_ids]
+        sim_logger.info(f"new infections =  {len(people_to_infect)}")
+        for person in people_to_infect:
+            self.selector.infect_person_at_time(person, self.timer.now)
+        # if n_people != len(self.world.people.members):
+        #    raise SimulatorError(
+        #        f"Number of people active {n_people} does not match "
+        #        f"the total people number {len(self.world.people.members)}"
+        #    )
         self.update_health_status(self.timer.now, self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)

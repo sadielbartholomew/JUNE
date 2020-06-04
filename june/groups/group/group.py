@@ -186,7 +186,7 @@ class Group(AbstractGroup):
 
     @property
     def must_timestep(self):
-        return self.size > 1 and self.size_infected > 0 and self.size_susceptible > 0
+        return self.size_infected > 1 and self.size_susceptible > 1 and self.size > 1 
 
     @property
     def size_infected(self):
