@@ -15,7 +15,7 @@ from june.groups.leisure import leisure
 from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
-from june.interaction import Interaction
+from june.interaction.interaction_new import Interaction
 
 from june.logger.logger import Logger
 from june.time import Timer
@@ -228,7 +228,6 @@ class Simulator:
         for step, activities in time_config["step_activities"]["weekend"].items():
             assert all(group in all_groups for group in activities)
 
-    #@profile
     def apply_activity_hierarchy(self, activities: List[str]) -> List[str]:
         """
         Returns a list of activities with the right order, obeying the permanent activity hierarcy
@@ -245,7 +244,6 @@ class Simulator:
         activities.sort(key=lambda x: self.activity_hierarchy.index(x))
         return activities
 
-    #@profile
     def activities_to_groups(self, activities: List[str]) -> List[str]:
         """
         Converts activities into Groups, the interaction will run over these Groups.
@@ -262,7 +260,6 @@ class Simulator:
         groups = [self.activity_to_group_dict[activity] for activity in activities]
         return list(chain(*groups))
 
-    #@profile
     def clear_world(self):
         """
         Removes everyone from all possible groups, and sets everyone's busy attribute
@@ -279,7 +276,6 @@ class Simulator:
         for person in self.world.people.members:
             person.busy = False
 
-    #@profile
     def get_subgroup_active(
         self, activities: List[str], person: "Person"
     ) -> "Subgroup":
@@ -442,10 +438,9 @@ class Simulator:
         # TODO: seems to be only used to set the infection length at the moment, but this is not logged
         # anywhere, so we could get rid of this potentially
         person.health_information.set_recovered(time)
-        person.susceptibility = 0.0
+        person.susceptible = False
         person.health_information = None
 
-    #@profile
     def update_health_status(self, time: float, duration: float):
         """
         Update symptoms and health status of infected people.
@@ -482,13 +477,13 @@ class Simulator:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
             )
-    #@profile
     def do_timestep(self):
         """
         Perform a time step in the simulation
 
         """
         activities = self.timer.activities
+        sim_logger.info(f"time step at day {self.timer.now}, duration {self.timer.duration}")
 
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
@@ -512,12 +507,18 @@ class Simulator:
             for cemetery in self.world.cemeteries.members:
                 n_people += len(cemetery.people)
         sim_logger.info(f"number of deaths =  {n_people}")
+        infected_ids = []
         for group_type in group_instances:
             for group in group_type.members:
-                self.interaction.time_step(
-                    self.timer.now, self.timer.duration, group, self.logger,
-                )
+                #infected_ids += self.interaction.time_step(
+                #    self.timer.duration, group, self.logger,
+                #)
+                self.interaction.time_step(self.timer.now, self.timer.shift_duration, group, self.logger)
                 n_people += group.size
+        #people_to_infect = [self.world.people[idx] for idx in infected_ids]
+        #sim_logger.info(f"new infections =  {len(people_to_infect)}")
+        #for person in people_to_infect:
+        #    self.selector.infect_person_at_time(person, self.timer.now)
         if n_people != len(self.world.people.members):
             raise SimulatorError(
                 f"Number of people active {n_people} does not match "

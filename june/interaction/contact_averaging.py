@@ -11,8 +11,8 @@ default_config_filename = (
 
 
 @nb.jit(nopython=True)
-def poisson_probability(delta_time, susceptibilities, beta, transmission_exponent):
-    return 1.0 - np.exp(-delta_time * susceptibilities * beta * transmission_exponent)
+def poisson_probability(delta_time, beta, transmission_exponent):
+    return 1.0 - np.exp(-delta_time * beta * transmission_exponent)
 
 
 @nb.jit(nopython=True)
@@ -174,7 +174,6 @@ class ContactAveraging(Interaction):
             idx = school_years[idx - 1] + 1
         return idx
 
-    # @profile
     def compute_effective_transmission(
         self,
         contact_matrix,
@@ -217,7 +216,6 @@ class ContactAveraging(Interaction):
             transmission_exponent=transmission_exponent,
         )
 
-    # @profile
     def single_time_step_for_subgroup(
         self,
         contact_matrix,
@@ -243,11 +241,9 @@ class ContactAveraging(Interaction):
             duration of the interaction (in units of days)
         """
         susceptibles = susceptibles_subgroup.susceptible
-        susceptibilities = np.array([person.susceptibility for person in susceptibles])
         transmission_probability = self.compute_effective_transmission(
             contact_matrix,
             subgroup_transmission_probabilities,
-            susceptibilities,
             susceptibles_subgroup,
             group,
             delta_time,
@@ -264,7 +260,6 @@ class ContactAveraging(Interaction):
                         group.infected, subgroup_transmission_probabilities
                 )
 
-    # @profile
     def single_time_step_for_group(
         self, group: "Group", time: float, delta_time: float, logger: "Logger",
     ):

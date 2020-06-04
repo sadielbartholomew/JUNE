@@ -46,12 +46,12 @@ class Person(dataobject):
     subgroups: Activities = Activities(None, None, None, None, None, None, None)
     health_information: HealthInformation = None
     # infection
-    susceptibility: float = 1.0
+    susceptible: bool = True
     dead: bool = False
 
     @classmethod
     def from_attributes(
-        cls, sex=27, age="f", ethnicity=None, socioecon_index=None, id=None
+        cls, age=27, sex="f", ethnicity=None, socioecon_index=None, id=None
     ):
         if id is None:
             id = next(Person._id)
@@ -75,10 +75,6 @@ class Person(dataobject):
             return True
 
         return False
-
-    @property
-    def susceptible(self):
-        return self.susceptibility > 0.0 and not self.infected and not self.dead
 
     @property
     def recovered(self):

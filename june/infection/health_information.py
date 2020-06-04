@@ -2,7 +2,6 @@ from june.infection.symptoms import SymptomTag
 
 class HealthInformation:
     __slots__ = (
-        "susceptibility",
         "susceptible",
         "infected",
         "infection",
@@ -18,7 +17,6 @@ class HealthInformation:
     )
 
     def __init__(self):
-        self.susceptibility = 1.0
         self.susceptible = True
         self.infected = False
         self.infection = None
@@ -36,7 +34,6 @@ class HealthInformation:
         self.infection = infection
         self.infected = True
         self.susceptible = False
-        self.susceptibility = 0.0
         self.time_of_infection = infection.start_time
 
     @property
@@ -71,7 +68,6 @@ class HealthInformation:
         self.recovered = True
         self.infected = False
         self.susceptible = False
-        self.susceptibility = 0.0
         self.set_length_of_infection(time)
         self.infection = None
 
@@ -79,7 +75,6 @@ class HealthInformation:
         self.dead = True
         self.infected = False
         self.susceptible = False
-        self.susceptibility = 0.0
         self.set_length_of_infection(time)
         self.infection = None
 
