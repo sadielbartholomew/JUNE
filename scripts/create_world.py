@@ -113,9 +113,9 @@ geography = Geography.from_file({"msoa" : msoaslist[:5]})
 
 # then this automatically creates the world and saves it to world.hdf5
 demography = Demography.for_geography(geography)
-geography.hospitals = Hospitals.for_geography(geography)
-geography.companies = Companies.for_geography(geography)
-geography.schools = Schools.for_geography(geography)
+#geography.hospitals = Hospitals.for_geography(geography)
+#geography.companies = Companies.for_geography(geography)
+#geography.schools = Schools.for_geography(geography)
 geography.care_homes = CareHomes.for_geography(geography)
 geography.cemeteries = Cemeteries()
 #
