@@ -21,7 +21,7 @@ from june.infection.infection import InfectionSelector
 from june.groups.commute import *
 from june.commute import *
 
-world_file = "world.hdf5"
+world_file = "test.hdf5"#"/home/arnau/juneworlds/june_worlds/north_east.hdf5"
 
 world = generate_world_from_hdf5(world_file, chunk_size=1_000_000)
 print("World loaded succesfully")
@@ -42,6 +42,7 @@ world.cemeteries = Cemeteries()
 
 # interaction
 # select path to infection configuration
+#selector_config = "./config_infection.yaml"
 selector = InfectionSelector.from_file()
 #interaction = ContactAveraging.from_file(selector=selector)
 interaction = Interaction.from_file()
@@ -55,17 +56,19 @@ n_cases = 2_000
 # two options, randomly, or one specific area.
 
 # 1. specific area
+
+seed_area = "E02005702"
 #seed_area = "E02000001" # area to start seed
-#for super_area in world.super_areas:
-#    if super_area.name == seed_area:
-#        print("super area found")
-#        break
-#seed.infect_super_area(super_area, 99) # seed 99 infections in seed_area
+for super_area in world.super_areas:
+    if super_area.name == seed_area:
+        print("super area found")
+        break
+seed.infect_super_area(super_area, 99) # seed 99 infections in seed_area
 
 # 2. randomly distribute
-seed.unleash_virus(
-    int(len(world.people)/10),
-)  # this will put 500 infected randomly
+#seed.unleash_virus(
+#    int(len(world.people)/10),
+#)  # this will put 500 infected randomly
 
 print("seeding OK")
 

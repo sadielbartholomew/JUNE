@@ -15,7 +15,7 @@ class InteractiveGroup:
             sus_ids = [person.id for person in subgroup.people if person.susceptible]
             if len(sus_ids) != 0:
                 self.has_susceptible = True
-                susceptible_ids.append(tuple(sus_ids))
+                susceptible_ids.append(np.array(sus_ids))
             inf_ids = [person.id for person in subgroup_infected]
             if len(inf_ids) != 0:
                 tprob = sum(
@@ -25,7 +25,7 @@ class InteractiveGroup:
                 if tprob != 0.0:
                     self.has_infected = True
                     trans_prob.append(tprob)
-                    infector_ids.append(tuple(inf_ids))
+                    infector_ids.append(np.array(inf_ids))
                     infector_subgroup_sizes.append(subgroup_size)
         
         self.must_timestep = self.has_susceptible and self.has_infected 
