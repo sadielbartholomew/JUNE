@@ -153,10 +153,11 @@ class Interaction:
     def time_step_for_group(self, delta_time: float, group: InteractiveGroup):
         contact_matrix = self.contact_matrices[group.spec]
         beta = self.beta[group.spec]
-        if group.spec == "school":
-            school_years = group.years
-        else:
-            school_years = None
+        school_years = group.school_years
+        #if group.spec == "school":
+        #    school_years = group.school_years
+        #else:
+        #    school_years = None
         if self.inverted:
             contact_matrix = contact_matrix.T
 
@@ -201,8 +202,10 @@ class Interaction:
         )
         return infected_ids
 
-    def time_step(self, delta_time, group):
-        return self.time_step_for_group(delta_time, group)
+    #def time_step(self, delta_time, int_group):
+
+            
+        #return self.time_step_for_group(delta_time, group)
         #infected_ids = []
         #for group in group_list:
         #    int_group = InteractiveGroup(group)

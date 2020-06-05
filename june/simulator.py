@@ -17,6 +17,7 @@ from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
 from june.interaction.interaction_new import Interaction
+from june.interactive_group import InteractiveGroup
 
 from june.logger.logger import Logger
 from june.time import Timer
@@ -519,8 +520,12 @@ class Simulator:
         infected_ids = []
         for group_type in group_instances:
             for group in group_type.members:
-                if group.must_timestep:
-                    infected_ids += self.interaction.time_step(self.timer.duration, group)
+                int_group = InteractiveGroup(group)
+                if int_group.must_timestep:
+                    # if group.must_timestep:
+                    infected_ids += self.interaction.time_step_for_group(
+                        self.timer.duration, int_group
+                    )
         people_to_infect = [self.world.people[idx] for idx in infected_ids]
         sim_logger.info(f"new infections =  {len(people_to_infect)}")
         for person in people_to_infect:
