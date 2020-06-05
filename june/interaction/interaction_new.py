@@ -78,13 +78,12 @@ def _translate_school_subgroup(idx, school_years):
     return idx
 
 class Interaction:
-    def __init__(self, alpha_physical, beta, contact_matrices, inverted=False):
+    def __init__(self, alpha_physical, beta, contact_matrices):
         self.alpha_physical = alpha_physical
         self.beta = beta
         self.contact_matrices = self.process_contact_matrices(
             groups=beta.keys(), input_contact_matrices=contact_matrices
         )
-        self.inverted = inverted
 
     @classmethod
     def from_file(
@@ -154,13 +153,6 @@ class Interaction:
         contact_matrix = self.contact_matrices[group.spec]
         beta = self.beta[group.spec]
         school_years = group.school_years
-        #if group.spec == "school":
-        #    school_years = group.school_years
-        #else:
-        #    school_years = None
-        if self.inverted:
-            contact_matrix = contact_matrix.T
-
         infected_ids = []
         for i, susceptible_id_list in enumerate(group.susceptible_ids):
             infected_ids += self.time_step_for_subgroup(
@@ -201,17 +193,3 @@ class Interaction:
             effective_transmission_probability, susceptible_ids
         )
         return infected_ids
-
-    #def time_step(self, delta_time, int_group):
-
-            
-        #return self.time_step_for_group(delta_time, group)
-        #infected_ids = []
-        #for group in group_list:
-        #    int_group = InteractiveGroup(group)
-        #    if int_group.must_timestep is False:
-        #        continue
-        #    infected_ids += self.time_step_for_group(delta_time, int_group)
-        #return infected_ids
-
-

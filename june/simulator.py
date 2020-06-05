@@ -35,11 +35,6 @@ class SimulatorError(BaseException):
     pass
 
 
-def interaction_time_step(interaction, duration, group):
-    infected_ids = interaction.time_step(duration, group)
-    return infected_ids
-
-
 class Simulator:
     def __init__(
         self,
@@ -522,11 +517,22 @@ class Simulator:
             for group in group_type.members:
                 int_group = InteractiveGroup(group)
                 if int_group.must_timestep:
-                    # if group.must_timestep:
-                    infected_ids += self.interaction.time_step_for_group(
+                    new_infected_ids = self.interaction.time_step_for_group(
                         self.timer.duration, int_group
                     )
+                    if new_infected_ids:
+                        n_infected = len(new_infected_ids)
+                        tprob_norm = sum(int_group.transmission_probabilities)
+                        for infector_id in list(chain(*int_group.infector_ids)):
+                            infector = self.world.people[infector_id]
+                            infector.health_information.number_of_infected += (
+                                n_infected
+                                * infector.health_information.infection.transmission.probability
+                                / tprob_norm
+                            )
+                    infected_ids += new_infected_ids
         people_to_infect = [self.world.people[idx] for idx in infected_ids]
+
         sim_logger.info(f"new infections =  {len(people_to_infect)}")
         for person in people_to_infect:
             self.selector.infect_person_at_time(person, self.timer.now)
