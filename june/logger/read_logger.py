@@ -33,18 +33,31 @@ class ReadLogger:
         self.end_date = max(self.infections_df.index)
         self.load_real_time_series()
 
-    def load_population_data(self):
+    def load_population_data(self, chunk_size=100000):
         """
         Load data related to population (age, sex, ...)
         """
+        ids = []
+        ages = []
+        sexes = []
+        super_areas = []
         with h5py.File(self.file_path, "r", libver="latest", swmr=True) as f:
             population = f["population"]
             self.n_people = population.attrs["n_people"]
-            self.ids = population["id"][:]
-            self.ages = population["age"][:]
-            self.sexes = population["sex"][:]
-            self.super_areas = population["super_area"][:].astype("U13")
-
+            n_chunks = int(np.ceil(self.n_people / chunk_size))
+            for chunk in range(n_chunks):
+                print(f"Loaded chunk {chunk} of {n_chunks}")
+                idx1 = chunk * chunk_size
+                idx2 = min((chunk + 1) * chunk_size, self.n_people)
+                ids += list(population["id"][idx1:idx2])
+                ages += list(population["age"][idx1:idx2])
+                sexes += list(population["sex"][idx1:idx2])
+                super_areas += list(population["super_area"][:].astype("U13"))
+        self.ids = np.array(ids)
+        self.ages = np.array(ages)
+        self.sexes = np.array(sexes)
+        self.super_areas = np.array(super_areas)
+     
     def load_infected_data(self,):
         """
         Load data on infected people over time and convert to a data frame ``self.infections_df``
