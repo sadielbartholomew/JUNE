@@ -44,6 +44,7 @@ class Simulator:
         activity_to_groups: dict,
         time_config: dict,
         seed: Optional["Seed"] = None,
+        leisure: Optional["Leisure"] = None,
         min_age_home_alone: int = 15,
         stay_at_home_complacency: float = 0.95,
         policies=Policies(),
@@ -124,7 +125,7 @@ class Simulator:
         if "commute" in self.all_activities:
             self.initialize_commute(activity_to_groups["commute"])
         if "leisure" in self.all_activities:
-            self.initialize_leisure(activity_to_groups["leisure"])
+            self.leisure = leisure
         if (
             "rail_travel_out" in self.all_activities
             or "rail_travel_back" in self.all_activities
@@ -138,6 +139,7 @@ class Simulator:
         interaction: "Interaction",
         selector: "InfectionSelector",
         policies=Policies(),
+        leisure= None,
         seed: "Seed" = None,
         config_filename: str = default_config_filename,
         save_path: str = "results",
@@ -168,6 +170,7 @@ class Simulator:
             selector,
             activity_to_groups,
             time_config,
+            leisure=leisure,
             policies=policies,
             seed=seed,
             save_path=save_path,
@@ -212,10 +215,8 @@ class Simulator:
         if hasattr(self, "travelunit_distributor"):
             self.travelunit_distributor.distribute_people_back()
 
-    def initialize_leisure(self, leisure_options):
-        self.leisure = leisure.generate_leisure_for_world(
-            list_of_leisure_groups=leisure_options, world=self.world
-        )
+        #leisure.generate_leisure_for_world(
+        #    list_of_leisure_groups=leisure_options, world=self.world
 
     def check_inputs(self, time_config: dict):
         """
@@ -310,7 +311,10 @@ class Simulator:
         for activity in activities:
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
-                    person, self.timer.duration, self.timer.is_weekend,
+                    person,
+                    self.timer.duration,
+                    self.timer.is_weekend,
+                    closed_venues=self.policies.find_closed_venues(self.timer.date),
                 )
             else:
                 subgroup = getattr(person, activity)
@@ -400,7 +404,9 @@ class Simulator:
         for person in self.world.people.members:
             if person.dead or person.busy:
                 continue
-            allowed_activities = self.policies.apply_activity_ban(person, date, activities)
+            allowed_activities = self.policies.apply_activity_ban(
+                person, date, activities
+            )
             if self.policies.must_stay_at_home(person, date, days_from_start):
                 self.move_mild_ill_to_household(person, allowed_activities)
             else:
