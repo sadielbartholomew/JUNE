@@ -84,6 +84,13 @@ class Simulator:
         self.selector = selector
         self.policies = policies
         self.light_logger = light_logger
+        self.need_interaction_groups = set()
+        self.should_be_active = 0
+        for person in world.people:
+            if person.infected:
+                if person.primary_activity is not None:
+                    self.need_interaction_groups.add(person.primary_activity.group)
+                self.need_interaction_groups.add(person.residence.group)
         self.activity_hierarchy = [
             "box",
             "hospital",
@@ -312,6 +319,13 @@ class Simulator:
         #    person=person, time=self.timer.now
         # )
         for activity in activities:
+            if activity == "primary_activity" and person.primary_activity is not None:
+                if person.primary_activity.group not in self.need_interaction_groups:
+                    return None
+            if activity == "residence":
+                if person.residence.group not in self.need_interaction_groups:
+                    return None
+
             if activity == "leisure" and person.leisure is None:
                 subgroup = self.leisure.get_subgroup_for_person_and_housemates(
                     person,
@@ -391,7 +405,8 @@ class Simulator:
             person.residence.append(person)
         else:
             subgroup = self.get_subgroup_active(activities, person)
-            subgroup.append(person)
+            if subgroup is not None:
+                subgroup.append(person)
 
     def move_people_to_active_subgroups(self, activities: List[str]):
         """
@@ -414,7 +429,8 @@ class Simulator:
                 self.move_mild_ill_to_household(person, activities)
             else:
                 subgroup = self.get_subgroup_active(activities, person)
-                subgroup.append(person)
+                if subgroup is not None:
+                    subgroup.append(person)
 
     def hospitalise_the_sick(self, person: "Person", previous_tag: str):
         """
@@ -482,22 +498,36 @@ class Simulator:
         ids = []
         symptoms = []
         n_secondary_infections = []
-        for person in self.world.people.infected:
-            health_information = person.health_information
-            previous_tag = health_information.tag
-            health_information.update_health_status(time, duration)
-            ids.append(person.id)
-            symptoms.append(person.health_information.tag.value)
-            n_secondary_infections.append(person.health_information.number_of_infected)
-            # Take actions on new symptoms
-            if health_information.recovered:
-                if person.hospital is not None:
-                    person.hospital.group.release_as_patient(person)
-                self.recover(person, time)
-            elif health_information.should_be_in_hospital:
-                self.hospitalise_the_sick(person, previous_tag)
-            elif health_information.is_dead:
-                self.bury_the_dead(person, time)
+        infected_groups = set()
+        susceptible_groups = set()
+        for person in self.world.people:  # self.world.people.infected:
+            if person.infected:
+                health_information = person.health_information
+                previous_tag = health_information.tag
+                health_information.update_health_status(time, duration)
+                ids.append(person.id)
+                symptoms.append(person.health_information.tag.value)
+                n_secondary_infections.append(
+                    person.health_information.number_of_infected
+                )
+                # Take actions on new symptoms
+                if health_information.recovered:
+                    if person.hospital is not None:
+                        person.hospital.group.release_as_patient(person)
+                    self.recover(person, time)
+                elif health_information.should_be_in_hospital:
+                    self.hospitalise_the_sick(person, previous_tag)
+                elif health_information.is_dead:
+                    self.bury_the_dead(person, time)
+                if person.infected:
+                    infected_groups.add(person.residence.group)
+                    if person.primary_activity is not None:
+                        infected_groups.add(person.primary_activity.group)
+            if person.susceptible:
+                susceptible_groups.add(person.residence.group)
+                if person.primary_activity is not None:
+                    susceptible_groups.add(person.primary_activity.group)
+        self.need_interaction_groups = infected_groups.intersection(susceptible_groups)
         if self.logger:
             self.logger.log_infected(
                 self.timer.date, ids, symptoms, n_secondary_infections
@@ -558,17 +588,18 @@ class Simulator:
                 )
                 n_people += group.size
                 n_people_group += group.size
-            
-        if n_people != len(self.world.people.members):
-            raise SimulatorError(
-                f"Number of people active {n_people} does not match "
-                f"the total people number {len(self.world.people.members)}"
-            )
+        # if n_people != self.should_be_active: #len(self.world.people.members):
+        #    raise SimulatorError(
+        #        f"Number of people active {n_people} does not match "
+        #        #f"the total people number {len(self.world.people.members)}"
+        #        f"the total people number {self.should_be_active}"
+        #    )
         self.update_health_status(time=self.timer.now, duration=self.timer.duration)
         if self.logger:
             self.logger.log_infection_location(self.timer.date)
             self.logger.log_hospital_capacity(self.timer.date, self.world.hospitals)
         self.clear_world()
+        self.should_be_active = 0
 
     def run(self):
         """
