@@ -17,7 +17,7 @@ def test__smaller_than_one():
     assert increasing_count ==121
 
 
-def test__No_negative_provavility():
+def test__No_negative_probability():
   probability_object=HealthIndexGenerator.from_file()
   probability_list=probability_object.prob_lists
   negatives=0.0
@@ -41,4 +41,19 @@ def test__growing_index():
             increasing_count+=0
 
     assert increasing_count ==0
+
+def test__asymptomatic_ratio():
+    health_index=HealthIndexGenerator.from_file(asymptomatic_ratio=0.43)
+    baseline_index=health_index(Person.from_attributes(age=80,sex='m'))
+    print(baseline_index)
+    new_health_index=HealthIndexGenerator.from_file(asymptomatic_ratio=0.2)
+    index=new_health_index(Person.from_attributes(age=80,sex='m'))
+
+    assert index[0] == 0.2
+
+    print(index)
+    print(np.diff(index))
+    print(np.diff(baseline_index)*1.43/1.2)
+    assert np.testing.assert_allclose(np.diff(index), np.diff(baseline_index)*1.43/1.2)
+    assert 1-index[-1] == 1-baseline_index[-1]*1.43/1.2
 

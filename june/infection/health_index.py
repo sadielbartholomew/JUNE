@@ -52,7 +52,7 @@ class HealthIndexGenerator:
     """
 
     def __init__(
-        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, Asimpto_ratio=0.43
+        self, poli_hosp: dict, poli_icu: dict, poli_deaths: dict, asymptomatic_ratio=0.43
     ):
         """
         Parameters:
@@ -74,7 +74,8 @@ class HealthIndexGenerator:
         self.poli_hosp = poli_hosp
         self.poli_icu = poli_icu
         self.poli_deaths = poli_deaths
-        self.Asimpto_ratio = Asimpto_ratio
+        self.asymptomatic_ratio = asymptomatic_ratio
+        self.baseline_asymptomatic_ratio = 0.43
         self.make_list()
 
     @classmethod
@@ -146,9 +147,10 @@ class HealthIndexGenerator:
               
 
         """
+        asymptomatic_correction = (1+self.baseline_asymptomatic_ratio)/(1+self.asymptomatic_ratio)
         ages = np.arange(0, 121, 1)  # from 0 to 120
         self.prob_lists = np.zeros([2, 121, 7])
-        self.prob_lists[:, :, 0] = self.Asimpto_ratio
+        self.prob_lists[:, :, 0] = self.asymptomatic_ratio
         # hosp,ICU,death ratios
 
         ratio_hosp_female = self.model(
@@ -168,8 +170,8 @@ class HealthIndexGenerator:
         )  # Dying in hospital (ICU+hosp)
 
         # Probability of being simptomatic but not going to hospital
-        no_hosp_female = 1.0 - self.Asimpto_ratio - ratio_hosp_female - ratio_icu_female
-        no_hosp_male = 1.0 - self.Asimpto_ratio - ratio_hosp_male - ratio_icu_male
+        no_hosp_female = 1.0 - self.asymptomatic_ratio - ratio_hosp_female - ratio_icu_female
+        no_hosp_male = 1.0 - self.asymptomatic_ratio - ratio_hosp_male - ratio_icu_male
 
         # Probability of getting pneumonia
         prob_pneumonia = np.ones(121)
@@ -181,8 +183,8 @@ class HealthIndexGenerator:
         prob_pneumonia[prob_pneumonia == 1] = RKIdata[len(RKIdata) - 1][1]
 
         # probavility of  mild simptoms
-        self.prob_lists[0, :, 1] = no_hosp_female * (1 - prob_pneumonia)
-        self.prob_lists[1, :, 1] = no_hosp_male * (1 - prob_pneumonia)
+        self.prob_lists[0, :, 1] = (no_hosp_female * (1 - prob_pneumonia))
+        self.prob_lists[1, :, 1] = (no_hosp_male * (1 - prob_pneumonia))
 
         # probavility of Surviving ICU
         survival_icu = np.ones(121)
@@ -202,9 +204,6 @@ class HealthIndexGenerator:
         icu_deaths_female = ratio_icu_female * (1 - survival_icu)
         icu_deaths_male = ratio_icu_male * (1 - survival_icu)
 
-        # self.prob_lists[0,:,7]=icu_deaths_female
-        # self.prob_lists[1,:,7]=icu_deaths_male
-
         # probability of Survinving  hospital
 
         deaths_hosp_noicu_female = ratio_death_female - icu_deaths_female
@@ -214,8 +213,8 @@ class HealthIndexGenerator:
         deaths_hosp_noicu_female[deaths_hosp_noicu_female < 0] = 1e-6
         deaths_hosp_noicu_male[deaths_hosp_noicu_male < 0] = 1e-6
 
-        self.prob_lists[0, :, 3] = ratio_hosp_female - deaths_hosp_noicu_female
-        self.prob_lists[1, :, 3] = ratio_hosp_male - deaths_hosp_noicu_male
+        self.prob_lists[0, :, 3] = (ratio_hosp_female - deaths_hosp_noicu_female)
+        self.prob_lists[1, :, 3] = (ratio_hosp_male - deaths_hosp_noicu_male)
 
         # probability of dying in hospital Without icu
         self.prob_lists[0, :, 6] = deaths_hosp_noicu_female
@@ -249,8 +248,8 @@ class HealthIndexGenerator:
         prob_home_pneumonia_female = no_hosp_female * prob_pneumonia
         prob_home_pneumonia_male = no_hosp_male * prob_pneumonia
 
-        self.prob_lists[0, :, 2] = prob_home_pneumonia_female - deaths_at_home_female
-        self.prob_lists[1, :, 2] = prob_home_pneumonia_male - deaths_at_home_male
+        self.prob_lists[0, :, 2] = (prob_home_pneumonia_female - deaths_at_home_female)
+        self.prob_lists[1, :, 2] = (prob_home_pneumonia_male - deaths_at_home_male)
 
     def __call__(self, person):
         """
