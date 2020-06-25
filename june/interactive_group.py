@@ -2,6 +2,15 @@ import numpy as np
 import numba as nb
 
 class InteractiveGroup:
+    """
+    Extracts the necessary information about a group to perform an interaction time
+    step over it. This step is necessary, since all the information is stored in numpy
+    arrays that allow for efficient computation.
+
+    Parameters
+    ----------
+    - group : group that we want to prepare for interaction.
+    """
     def __init__(self, group):
         infector_ids = []
         trans_prob = []
@@ -30,6 +39,13 @@ class InteractiveGroup:
         
         self.must_timestep = self.has_susceptible and self.has_infected 
         if self.must_timestep is False:
+            self.spec = None
+            self.infector_ids = None
+            self.transmission_probabilities = None
+            self.susceptible_ids = None
+            self.infector_subgroup_sizes = None
+            self.size = None
+            self.school_years = None
             return 
         self.spec = group.spec
         self.infector_ids = np.array(infector_ids)

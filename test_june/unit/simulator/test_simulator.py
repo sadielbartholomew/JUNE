@@ -9,7 +9,7 @@ from june.groups import Hospitals, Schools, Companies, CareHomes, Cemeteries, Un
 from june.groups.leisure import leisure, Cinemas, Pubs, Groceries
 from june.policy import Policies
 from june.infection import InfectionSelector, SymptomTag
-from june.interaction import ContactAveraging
+from june.interaction import Interaction
 from june.simulator import Simulator
 from june.world import generate_world_from_geography
 
@@ -51,7 +51,7 @@ def create_simulator():
     selector = InfectionSelector.from_file(config_filename=constant_config)
     selector.recovery_rate = 0.05
     selector.transmission_probability = 0.7
-    interaction = ContactAveraging.from_file()
+    interaction = Interaction.from_file()
     interaction.selector = selector
     policies = Policies.from_file()
     sim = Simulator.from_file(world, interaction, selector, config_filename=test_config,

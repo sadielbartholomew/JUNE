@@ -15,9 +15,7 @@ from june.groups.travel.travelunit_distributor import TravelUnitDistributor
 from june.infection.infection import InfectionSelector
 from june.infection import Infection
 from june.infection.health_index import HealthIndexGenerator
-from june.interaction.interaction_new import Interaction
 from june.interactive_group import InteractiveGroup
-
 from june.interaction import Interaction
 from june.logger.logger import Logger
 from june.policy import Policies
@@ -312,14 +310,13 @@ class Simulator:
                 subgroup = getattr(person, activity)
             if subgroup is not None:
                 subgroup.append(person)
-                return 
+                return
         raise SimulatorError(
             "Attention! Some people do not have an activity in this timestep."
         )
 
     def kid_drags_guardian(
-        self,
-        guardian: "Person",
+        self, guardian: "Person",
     ):
         """
         A kid makes their guardian go home.
@@ -342,9 +339,7 @@ class Simulator:
                         break
             guardian.residence.append(guardian)
 
-    def move_mild_kid_guardian_to_household(
-        self, kid: "Person"
-    ):
+    def move_mild_kid_guardian_to_household(self, kid: "Person"):
         """
         Move  a kid and their guardian to the household, so no kid is left
         home alone.
@@ -361,14 +356,10 @@ class Simulator:
         ]
         if len(possible_guardians) == 0:
             guardian = kid.find_guardian()
-            self.kid_drags_guardian(
-                guardian
-            )
+            self.kid_drags_guardian(guardian)
         kid.residence.append(kid)
 
-    def move_mild_ill_to_household(
-        self, person: "Person", activities: List[str]
-    ):
+    def move_mild_ill_to_household(self, person: "Person", activities: List[str]):
         """
         Move person with a mild illness to their households. For kids that will
         always happen, and if they are left alone at home they will also drag one
@@ -383,15 +374,11 @@ class Simulator:
             list of activities that take place at a given time step
         """
         if person.age < self.min_age_home_alone:
-            self.move_mild_kid_guardian_to_household(
-                person
-            )
+            self.move_mild_kid_guardian_to_household(person)
         elif random.random() <= self.stay_at_home_complacency:
             person.residence.append(person)
         else:
-            self.move_to_active_subgroup(
-                activities, person
-            )
+            self.move_to_active_subgroup(activities, person)
 
     def move_people_to_active_subgroups(
         self,
@@ -417,9 +404,7 @@ class Simulator:
                 continue
             allowed_activities = skip_activity_collection(person, activities)
             if stay_home_collection(person, days_from_start):
-                self.move_mild_ill_to_household(
-                    person, allowed_activities
-                )
+                self.move_mild_ill_to_household(person, allowed_activities)
             else:
                 self.move_to_active_subgroup(allowed_activities, person)
 
@@ -516,10 +501,6 @@ class Simulator:
 
         """
         activities = self.timer.activities
-        sim_logger.info(
-            f"time step at day {self.timer.now}, duration {self.timer.duration}"
-        )
-
         if not activities or len(activities) == 0:
             sim_logger.info("==== do_timestep(): no active groups found. ====")
             return
@@ -540,9 +521,7 @@ class Simulator:
             self.policies.find_closed_venues(self.timer.date),
         )
         self.move_people_to_active_subgroups(
-            activities,
-            self.timer.date,
-            self.timer.now,
+            activities, self.timer.date, self.timer.now,
         )
         active_groups = self.activities_to_groups(activities)
         group_instances = [
@@ -554,10 +533,6 @@ class Simulator:
 
         for cemetery in self.world.cemeteries.members:
             n_people += len(cemetery.people)
-        sim_logger.info(
-            f"Date = {self.timer.date}, number of deaths =  {n_people}, number of infected = {len(self.world.people.infected)}"
-        )
-
         if (
             self.policies.social_distancing
             and self.policies.social_distancing_start
@@ -581,6 +556,9 @@ class Simulator:
                     )
                     if new_infected_ids:
                         n_infected = len(new_infected_ids)
+                        self.logger.accumulate_infection_location(
+                            group.spec, n_infected
+                        )
                         tprob_norm = sum(int_group.transmission_probabilities)
                         for infector_id in list(chain(*int_group.infector_ids)):
                             infector = self.world.people[infector_id]
@@ -592,7 +570,14 @@ class Simulator:
                     infected_ids += new_infected_ids
         people_to_infect = [self.world.people[idx] for idx in infected_ids]
 
-        sim_logger.info(f"new infections =  {len(people_to_infect)}")
+        sim_logger.info(
+            f"""
+        Date = {self.timer.date}
+            - total deaths : {len(cemetery.people)}
+            - total infections : {len(self.world.people.infected)} 
+            - new infections : {len(people_to_infect)}
+        """
+        )
         for person in people_to_infect:
             self.selector.infect_person_at_time(person, self.timer.now)
         self.update_health_status(self.timer.now, self.timer.duration)
@@ -692,9 +677,7 @@ class SimulatorBox(Simulator):
             light_logger,
         )
 
-    def kid_drags_guardian(
-        self, guardian
-    ):
+    def kid_drags_guardian(self, guardian):
         # not available in box
         pass
 

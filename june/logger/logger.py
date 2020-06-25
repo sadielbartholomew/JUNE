@@ -225,7 +225,7 @@ class Logger:
             plural = "commutecityunits"
         return len(getattr(world, plural).members)
 
-    def accumulate_infection_location(self, location):
+    def accumulate_infection_location(self, location, n_infections=1):
         """
         Store where infections happend in a time step
         
@@ -234,7 +234,7 @@ class Logger:
         location:
             group type of the group in which the infection took place
         """
-        self.infection_location.append(location)
+        self.infection_location += [location for _ in range(n_infections)]
 
     def log_infection_location(self, time):
         """

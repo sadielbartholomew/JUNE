@@ -1,5 +1,4 @@
-from june.interaction.contact_averaging import ContactAveraging
-from june.interaction.contact_sampling import ContactSampling
+from june.interaction import Interaction
 from june.infection.infection import InfectionSelector
 from june.groups import School
 from june.demography import Person
@@ -12,7 +11,7 @@ test_config = paths.configs_path / "defaults/interaction/ContactInteraction.yaml
 
 
 def test__contact_matrices_from_default():
-    interaction = ContactAveraging.from_file(config_filename=test_config, selector=None)
+    interaction = Interaction.from_file(config_filename=test_config)
     np.testing.assert_allclose(
         interaction.contact_matrices["pub"],
         np.array([[3 * (1 + 0.12) * 24 / 3]]),
@@ -44,7 +43,7 @@ def test__contact_matrices_from_default():
 
 
 def test__school_index_translation():
-    interaction = ContactAveraging.from_file(selector=None)
+    interaction = Interaction.from_file()
     age_min = 3
     age_max = 7
     school_years = list(range(age_min, age_max + 1))
@@ -53,7 +52,7 @@ def test__school_index_translation():
 
 
 def test__school_contact_matrices():
-    interaction = ContactAveraging.from_file(selector=None)
+    interaction = Interaction.from_file()
     xi = 0.3
     age_min = 3
     age_max = 7
@@ -93,9 +92,11 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
             group.subgroups[1].append(person)
         for person in people[n_students:]:
             group.subgroups[0].append(person)
-        interaction.single_time_step_for_group(
-            group, days_to_infection, delta_time, logger=None
+        infected_ids = interaction.time_step_for_group(
+            group, delta_time
         )
+        if infected_ids:
+            break
         days_to_infection += delta_time
         group.clear()
 
@@ -131,11 +132,8 @@ def create_school(n_students, n_teachers):
     "n_teachers,mode",
     [
         [2, "average"],
-        # [2, "sampling"],
         [4, "average"],
-        ## [4, "sampling"],
         [6, "average"],
-        ## [6, "sampling"],
     ],
 )
 def test__average_time_to_infect(n_teachers, mode):
@@ -149,15 +147,14 @@ def test__average_time_to_infect(n_teachers, mode):
         "characteristic_time": 24,
     }
     if mode == "average":
-        interaction = ContactAveraging(
+        interaction = Interaction(
             beta={"school": 1,},
             alpha_physical=1,
-            selector=selector,
             contact_matrices={"school": contact_matrices},
         )
     elif mode == "sampling":
-        interaction = ContactSampling(
-            betas={"school": 1,}, alphas={"school": 1,}, selector=selector,
+        interaction = Interaction(
+            betas={"school": 1,}, alphas={"school": 1,}
         )
     n_days = []
     for _ in range(1000):
