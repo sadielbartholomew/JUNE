@@ -48,10 +48,11 @@ class Person(dataobject):
     # infection
     susceptible: bool = True
     dead: bool = False
+    social_venues : dict = None
 
     @classmethod
     def from_attributes(
-        cls, age=27, sex="f", ethnicity=None, socioecon_index=None, id=None
+        cls, sex="f", age=27, ethnicity=None, socioecon_index=None, id=None
     ):
         if id is None:
             id = next(Person._id)
@@ -64,6 +65,7 @@ class Person(dataobject):
             # IMPORTANT, these objects need to be recreated, otherwise the default
             # is always the same object !!!!
             subgroups=Activities(None, None, None, None, None, None, None),
+            social_venues = {}
         )
 
     @property
@@ -147,3 +149,17 @@ class Person(dataobject):
             return None
         else:
             return guardian
+
+    @property
+    def infection(self):
+        if self.health_information is None:
+            return None
+        else:
+            return self.health_information.infection
+
+    @property
+    def symptoms(self):
+        if self.health_information is None:
+            return None
+        else:
+            return self.health_information.infection.symptoms

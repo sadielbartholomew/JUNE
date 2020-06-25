@@ -1,15 +1,16 @@
 import numpy as np
 import pandas as pd
 import datetime
+from collections import Counter
+from june import paths
+from typing import List, Tuple, Optional
 from june.demography.geography import SuperAreas
 from june.infection.infection import InfectionSelector
-from june import paths
-from typing import List, Tuple
 from june.infection.health_index import HealthIndexGenerator
 
-default_n_cases_region_filename = paths.data_path / "processed/seed/n_cases_region.csv"
+default_n_cases_region_filename = paths.data_path / "input/seed/n_cases_region.csv"
 default_msoa_region_filename = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 
 
@@ -18,9 +19,10 @@ class Seed:
         self,
         super_areas: SuperAreas,
         selector: InfectionSelector,
-        n_cases_region: pd.DataFrame = None,
-        msoa_region: pd.DataFrame = None,
-        dates: List["datetime"] = None,
+        n_cases_region: Optional[pd.DataFrame] = None,
+        msoa_region: Optional[pd.DataFrame] = None,
+        dates: Optional[List["datetime"]] = None,
+        seed_strength: float = 1.0,
     ):
         """
         Class to initialize the infection 
@@ -47,6 +49,7 @@ class Seed:
         self.dates = dates
         self.min_date = min(self.dates) if self.dates else None
         self.max_date = max(self.dates) if self.dates else None
+        self.seed_strength = seed_strength
         self.dates_seeded = []
 
     @classmethod
@@ -56,6 +59,7 @@ class Seed:
         selector: "InfectionSelector",
         n_cases_region_filename: str = default_n_cases_region_filename,
         msoa_region_filename: str = default_msoa_region_filename,
+        seed_strength: float = 1.0,
     ) -> "Seed":
         """
         Initialize Seed from file containing the number of cases per region, and mapping
@@ -73,6 +77,8 @@ class Seed:
             path to csv file with n cases per region.
         msoa_region:
             path to csv file containing mapping between super areas and regions.
+        seed_strengh:
+            seed only a ```seed_strength``` percent of the original cases
         
         Returns
         -------
@@ -86,9 +92,14 @@ class Seed:
             for date in dates
         ]
 
-        msoa_region = pd.read_csv(msoa_region_filename)[["msoa", "region"]]
+        msoa_region = pd.read_csv(msoa_region_filename)[["super_area", "region"]]
         return Seed(
-            super_areas, selector, n_cases_region, msoa_region.drop_duplicates(), dates
+            super_areas,
+            selector,
+            n_cases_region,
+            msoa_region.drop_duplicates(),
+            dates,
+            seed_strength=seed_strength,
         )
 
     def _filter_region(self, region: str = "North East") -> List["SuperArea"]:
@@ -109,7 +120,7 @@ class Seed:
             msoa_region_filtered = self.msoa_region[self.msoa_region.region == region]
         filter_region = list(
             map(
-                lambda x: x in msoa_region_filtered["msoa"].values,
+                lambda x: x in msoa_region_filtered["super_area"].values,
                 self.super_area_names,
             )
         )
@@ -129,10 +140,16 @@ class Seed:
         """
         n_people_region = np.sum([len(super_area.people) for super_area in super_areas])
         n_cases_homogeneous = n_cases / n_people_region
-        for super_area in super_areas:
+        weights = [
+            len(super_area.people) / n_people_region for super_area in super_areas
+        ]
+        chosen_super_areas = np.random.choice(
+            super_areas, size=n_cases, replace=True, p=weights
+        )
+        n_cases_dict = Counter(chosen_super_areas)
+        for super_area, n_cases_super_area in n_cases_dict.items():
             if super_area in self.super_areas.members:
-                n_cases_super_area = int(n_cases_homogeneous * len(super_area.people))
-                if n_cases_super_area >= 0:
+                if n_cases_super_area > 0:
                     self.infect_super_area(super_area, n_cases_super_area)
 
     def infect_super_area(self, super_area: "SuperArea", n_cases: int):
@@ -166,8 +183,22 @@ class Seed:
                 self.n_cases_region["region"], self.n_cases_region[date_str]
             ):
                 super_areas = self._filter_region(region=region)
-                self.infect_super_areas(super_areas, n_cases)
+                if len(super_areas) > 0:
+                    self.infect_super_areas(
+                        super_areas, int(self.seed_strength * n_cases)
+                    )
             self.dates_seeded.append(date.date())
+
+    def unleash_virus_per_day(self, area, n_cases, date):
+        """
+        Seed the infection in a given area, over several days
+
+        """
+        date_str = date.strftime("%Y-%m-%d 00:00:00")
+        if date.date() not in self.dates_seeded:
+            self.infect_super_area(self, n_cases)
+            self.dates_seeded.append(date.date())
+
 
     def unleash_virus(self, n_cases, box_mode=False):
         """
@@ -177,4 +208,6 @@ class Seed:
         if box_mode:
             self.infect_super_area(self.super_areas.members[0], n_cases)
         else:
-            self.infect_super_areas(self.super_areas.members, n_cases)
+            self.infect_super_areas(
+                self.super_areas.members, int(self.seed_strength * n_cases)
+            )

@@ -11,12 +11,8 @@ from june import paths
 from june.demography.geography import Geography, Area
 from june.groups.group import Group, Supergroup
 
-default_data_filename = (
-    paths.data_path / "processed/census_data/output_area/EnglandWales/carehomes.csv"
-)
-default_areas_map_path = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
-)
+default_data_filename = paths.data_path / "input/care_homes/care_homes_ew.csv"
+default_areas_map_path = paths.data_path / "input/geography/area_super_area_region.csv"
 default_config_filename = paths.configs_path / "defaults/groups/carehome.yaml"
 logger = logging.getLogger(__name__)
 
@@ -35,7 +31,13 @@ class CareHome(Group):
     2 - visitors 
     """
 
-    __slots__ = "n_residents", "area", "n_workers", "relatives"
+    __slots__ = (
+        "n_residents",
+        "area",
+        "n_workers",
+        "relatives_in_care_homes",
+        "relatives_in_households",
+    )
 
     class SubgroupType(IntEnum):
         workers = 0
@@ -49,26 +51,21 @@ class CareHome(Group):
         self.n_residents = n_residents
         self.n_workers = n_workers
         self.area = area
-        self.relatives = None
+        self.relatives_in_care_homes = None
+        self.relatives_in_households = None
 
     def add(
-        self,
-        person,
-        subgroup_type=SubgroupType.residents,
-        activity: str = "residence",
-        dynamic: bool = False,
+        self, person, subgroup_type=SubgroupType.residents, activity: str = "residence",
     ):
         if activity == "leisure":
             super().add(
-                person,
-                subgroup_type=self.SubgroupType.visitors,
-                activity="leisure",
-                dynamic=True,
+                person, subgroup_type=self.SubgroupType.visitors, activity="leisure",
             )
         else:
-            super().add(
-                person, subgroup_type=subgroup_type, activity=activity, dynamic=dynamic,
-            )
+            super().add(person, subgroup_type=subgroup_type, activity=activity)
+
+    def get_leisure_subgroup(self, person):
+        return self.subgroups[self.SubgroupType.visitors]
 
     @property
     def workers(self):
@@ -130,7 +127,7 @@ class CareHomes(Supergroup):
             care_home_df = care_home_df.loc[area_names]
         care_homes = []
         logger.info(
-            f"There are {len(care_home_df.loc[care_home_df.values != 0])} care_homes in this geography."
+            f"There are {len(care_home_df.loc[care_home_df.values!=0])} care_homes in this geography."
         )
         for area in areas:
             n_residents = care_home_df.loc[area.name].values[0]

@@ -1,8 +1,10 @@
 import collections
 import pytest
+import numpy as np
 
 from june.demography.geography import Geography
 from june import demography as d
+from june.demography import AgeSexGenerator
 
 
 @pytest.fixture(name="area")
@@ -12,7 +14,7 @@ def area_name():
 
 @pytest.fixture(name="geography_demography_test", scope="module")
 def create_geography():
-    return Geography.from_file(filter_key={"msoa": ["E02004935"]})
+    return Geography.from_file(filter_key={"super_area": ["E02004935"]})
 
 
 def test__age_sex_generator():
@@ -30,7 +32,7 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
-        socioecon_index_value
+        socioecon_index_value,
     )
     assert list(age_sex_generator.age_iterator) == [1, 1, 3, 3, 4, 4, 4, 4]
     assert list(age_sex_generator.sex_iterator) == [
@@ -51,7 +53,7 @@ def test__age_sex_generator():
         ethnicity_age_bins,
         ethnicity_groups,
         ethnicity_structure,
-        socioecon_index_value
+        socioecon_index_value,
     )
     assert age_sex_generator.socioecon_index() == socioecon_index_value
     ages = []
@@ -76,12 +78,13 @@ def test__age_sex_generator():
         ["A", "A", "C", "C", "B", "B", "B", "B"]
     )
     assert collections.Counter(socioecon_indices) == collections.Counter(
-            [4, 4, 4, 4, 4, 4, 4, 4])
+        [4, 4, 4, 4, 4, 4, 4, 4]
+    )
 
 
 class TestDemography:
     def test__demography_for_areas(self):
-        geography = Geography.from_file({"oa": ["E00088544"]})
+        geography = Geography.from_file({"area": ["E00088544"]})
         area = list(geography.areas)[0]
         demography = d.Demography.for_areas(area_names=[area.name])
         area.populate(demography)
@@ -113,12 +116,37 @@ class TestDemography:
         assert max(people_ages_dict.keys()) == 90
 
     def test__demography_for_super_areas(self):
-        demography = d.Demography.for_zone(filter_key={"msoa": ["E02004935"]})
+        demography = d.Demography.for_zone(filter_key={"super_area": ["E02004935"]})
         assert len(demography.age_sex_generators) == 26
 
     def test__demography_for_geography(self, geography_demography_test):
         demography = d.Demography.for_geography(geography_demography_test)
         assert len(demography.age_sex_generators) == 26
+
+    def test__age_sex_generator_from_bins(self):
+        men_age_dict = {"0-10": 1000, "11-70": 2000, "71-99": 500}
+        women_age_dict = {"0-10": 1500, "11-70": 1000, "71-99": 1000}
+        age_sex_gen = AgeSexGenerator.from_age_sex_bins(men_age_dict, women_age_dict)
+        people_number = sum(men_age_dict.values()) + sum(women_age_dict.values())
+        ages = []
+        sexes = []
+        for _ in range(people_number):
+            ages.append(age_sex_gen.age())
+            sexes.append(age_sex_gen.sex())
+        ages = np.array(ages)
+        sexes = np.array(sexes)
+        men_idx = sexes == "m"
+        men_ages = ages[men_idx]
+        women_ages = ages[~men_idx]
+        _, men_counts = np.unique(
+            np.digitize(men_ages, [0, 11, 71]), return_counts=True
+        )
+        _, women_counts = np.unique(
+            np.digitize(women_ages, [0, 11, 71]), return_counts=True
+        )
+        np.testing.assert_allclose(
+            men_counts / women_counts, [10 / 15, 20 / 10, 5 / 10], atol=0, rtol=0.05
+        )
 
 
 class TestPopulation:

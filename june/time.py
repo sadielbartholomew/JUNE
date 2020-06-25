@@ -70,6 +70,14 @@ class Timer:
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
         self.previous_date = self.initial_date
 
+    def reset_to_new_date(self, date):
+        self.date = date
+        self.shift = 0
+        self.delta_time = datetime.timedelta(hours=self.shift_duration)
+        self.previous_date = self.initial_date
+
+
+
     def __iter__(self):
         return self
 
@@ -81,15 +89,3 @@ class Timer:
             self.shift = 0
         self.delta_time = datetime.timedelta(hours=self.shift_duration)
         return self.date
-
-
-if __name__ == "__main__":
-    time = Timer()
-    for i in range(8):
-        print(time.date)
-        print(time.now)
-        print(time.is_weekend)
-        print(time.day_of_week)
-        print(time.activities)
-        next(time)
-

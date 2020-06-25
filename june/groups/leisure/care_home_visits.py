@@ -9,10 +9,10 @@ from .social_venue import SocialVenue, SocialVenues, SocialVenueError
 from .social_venue_distributor import SocialVenueDistributor
 from june.paths import data_path, configs_path
 
-default_config_filename = configs_path / "defaults/groups/leisure/residence_visits.yaml"
+default_config_filename = configs_path / "defaults/groups/leisure/care_home_visits.yaml"
 
 
-class VisitsDistributor(SocialVenueDistributor):
+class CareHomeVisitsDistributor(SocialVenueDistributor):
     def __init__(
         self,
         super_areas: SuperAreas,
@@ -64,28 +64,44 @@ class VisitsDistributor(SocialVenueDistributor):
                 np.random.shuffle(households_super_area)
             for area in super_area.areas:
                 if area.care_home is not None:
-                    people_in_care_home = [person for person in area.care_home.residents]
+                    people_in_care_home = [
+                        person for person in area.care_home.residents
+                    ]
                     for i, person in enumerate(people_in_care_home):
-                        if households_super_area[i].relatives is None:
-                            households_super_area[i].relatives = (person,)
+                        if households_super_area[i].relatives_in_care_homes is None:
+                            households_super_area[i].relatives_in_care_homes = (person,)
                         else:
-                            households_super_area[i].relatives = tuple(
-                                (*households_super_area[i].relatives, person,)
+                            households_super_area[i].relatives_in_care_homes = tuple(
+                                (
+                                    *households_super_area[i].relatives_in_care_homes,
+                                    person,
+                                )
                             )
 
-    def get_social_venue_for_person(self, person):
-        relatives = person.residence.group.relatives
-        if relatives is None:
-            return
-        if len([person for person in relatives if person.dead is False]) == 0:
-            return
-        elif len(relatives) == 1:
-            return relatives[0].residence.group
-        else:
-            relative = np.random.choice(relatives)
-            return relative.residence.group
+    def get_possible_venues_for_person(self, person):
+        if (
+            person.residence.group.spec == "care_home"
+            or person.residence.group.relatives_in_care_homes is None
+        ):
+            return ()
+        return tuple(
+            [
+                relative.residence.group
+                for relative in person.residence.group.relatives_in_care_homes
+                if relative.dead is False
+            ]
+        )
 
-    def get_poisson_parameter(self, person, is_weekend: bool = False):
+    def get_social_venue_for_person(self, person):
+        relatives = person.residence.group.relatives_in_care_homes
+        if relatives is None:
+            return None
+        alive_relatives = [relative for relative in relatives if relative.dead is False]
+        return alive_relatives[
+            np.random.randint(0, len(alive_relatives))
+        ].residence.group
+
+    def get_poisson_parameter(self, sex, age, is_weekend: bool = False):
         """
         Poisson parameter (lambda) of a person going to one social venue according to their
         age and sex and the distribution of visitors in the venue.
@@ -99,24 +115,10 @@ class VisitsDistributor(SocialVenueDistributor):
         is_weekend
             whether it is a weekend or not
         """
-        if person.residence.group.relatives is None:
-            return 0
-        # do not visit dead people
-        if (
-            len(
-                [
-                    person
-                    for person in person.residence.group.relatives
-                    if person.dead is False
-                ]
-            )
-            == 0
-        ):
-            return 0
-        if person.sex == "m":
-            probability = self.male_probabilities[person.age]
+        if sex == "m":
+            probability = self.male_probabilities[age]
         else:
-            probability = self.female_probabilities[person.age]
+            probability = self.female_probabilities[age]
         if is_weekend:
             probability = probability * self.weekend_boost
         return probability

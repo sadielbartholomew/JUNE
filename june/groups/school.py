@@ -15,10 +15,10 @@ from june.groups.group import Group, Subgroup, Supergroup
 
 
 default_data_filename = (
-    paths.data_path / "processed/school_data/england_schools_data.csv"
+    paths.data_path / "input/schools/england_schools.csv"
 )
 default_areas_map_path = (
-    paths.data_path / "processed/geographical_data/oa_msoa_region.csv"
+    paths.data_path / "input/geography/area_super_area_region.csv"
 )
 default_config_filename = paths.configs_path / "defaults/groups/schools.yaml"
 
@@ -216,7 +216,7 @@ class Schools(Supergroup):
         logger.info(f"There are {len(school_df)} schools in this geography.")
         with open(config_file) as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
-        return cls.build_schools_for_areas(areas, school_df, **config,)
+        return cls.build_schools_for_areas(areas, school_df)#, **config,)
 
     @classmethod
     def build_schools_for_areas(
