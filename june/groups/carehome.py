@@ -37,6 +37,7 @@ class CareHome(Group):
         "n_workers",
         "relatives_in_care_homes",
         "relatives_in_households",
+        "quarantine_starting_date",
     )
 
     class SubgroupType(IntEnum):
@@ -53,6 +54,7 @@ class CareHome(Group):
         self.area = area
         self.relatives_in_care_homes = None
         self.relatives_in_households = None
+        self.quarantine_starting_date = None
 
     def add(
         self, person, subgroup_type=SubgroupType.residents, activity: str = "residence",
@@ -78,6 +80,9 @@ class CareHome(Group):
     @property
     def visitors(self):
         return self.subgroups[self.SubgroupType.visitors]
+
+    def quarantine(self, time, quarantine_days):
+        return True
 
 
 class CareHomes(Supergroup):
