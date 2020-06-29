@@ -21,8 +21,8 @@ class InteractiveGroup:
         self.has_susceptible = False
         self.has_infector = False
         for i, subgroup in enumerate(group.subgroups):
-            subgroup_size = subgroup.size
-            subgroup_infected = subgroup.infected
+            subgroup_size = len(subgroup.people)
+            subgroup_infected = [person for person in subgroup if person.infected]
             sus_ids = [person.id for person in subgroup.people if person.susceptible]
             if len(sus_ids) != 0:
                 self.has_susceptible = True
@@ -43,18 +43,11 @@ class InteractiveGroup:
         
         self.must_timestep = self.has_susceptible and self.has_infector 
         if self.must_timestep is False:
-            self.spec = None
-            self.infector_ids = None
-            self.transmission_probabilities = None
-            self.susceptible_ids = None
-            self.infector_subgroup_sizes = None
-            self.size = None
-            self.school_years = None
             return 
         self.spec = group.spec
-        self.infector_ids = np.array(infector_ids)
+        self.infector_ids = tuple(infector_ids)
         self.transmission_probabilities = np.array(trans_prob)
-        self.susceptible_ids = np.array(susceptible_ids)
+        self.susceptible_ids = tuple(susceptible_ids)
         self.subgroups_susceptible = tuple(self.subgroups_susceptible)
         self.subgroups_infector = tuple(self.subgroups_infector)
         self.infector_subgroup_sizes = tuple(infector_subgroup_sizes)
@@ -69,13 +62,18 @@ if __name__ == "__main__":
     import time
     from june.groups import Household
     from june.demography import Person
+    from june.infection import InfectionSelector
 
+    selector = InfectionSelector.from_file()
     household = Household()
     i = 0
-    for _ in range(0, 10):
+    for i in range(0, 10):
         p = Person.from_attributes()
         household.add(p, subgroup_type=i % len(household.subgroups))
-    household.clear()
+        if i % 2 == 0:
+            selector.infect_person_at_time(p, 0)
+            p.health_information.update_health_status(5, 5)
+    #household.clear()
     t1 = time.time()
     for _ in range(300_000):
         interactive_group = InteractiveGroup(household)

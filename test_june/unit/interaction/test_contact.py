@@ -1,8 +1,9 @@
-from june.interaction import Interaction
+from june.interaction import Interaction, interaction
 from june.infection.infection import InfectionSelector
 from june.groups import School
 from june.demography import Person
 from june import paths
+from june.interactive_group import InteractiveGroup
 
 import pytest
 import numpy as np
@@ -44,42 +45,41 @@ def test__contact_matrices_from_default():
 
 
 def test__school_index_translation():
-    interaction = Interaction.from_file()
     age_min = 3
     age_max = 7
     school_years = list(range(age_min, age_max + 1))
-    interaction.translate_school_subgroup(1, school_years) == 4
-    interaction.translate_school_subgroup(5, school_years) == 8
+    interaction._translate_school_subgroup(1, school_years) == 4
+    interaction._translate_school_subgroup(5, school_years) == 8
 
 
 def test__school_contact_matrices():
-    interaction = Interaction.from_file()
+    interaction_instance = Interaction.from_file()
     xi = 0.3
     age_min = 3
     age_max = 7
     school_years = list(range(age_min, age_max + 1))
-    contact_matrix = interaction.contact_matrices["school"]
-    n_contacts_same_year = interaction.get_contacts_in_school(
+    contact_matrix = interaction_instance.contact_matrices["school"]
+    n_contacts_same_year = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 4
     )
     assert n_contacts_same_year == 2.875*3
 
-    n_contacts_year_above = interaction.get_contacts_in_school(
+    n_contacts_year_above = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 5
     )
     assert n_contacts_year_above == xi*2.875 * 3
 
-    n_contacts_teacher_teacher = interaction.get_contacts_in_school(
+    n_contacts_teacher_teacher = interaction._get_contacts_in_school(
         contact_matrix, school_years, 0, 0
     )
     assert n_contacts_teacher_teacher == 5.25*3
 
-    n_contacts_teacher_student = interaction.get_contacts_in_school(
+    n_contacts_teacher_student = interaction._get_contacts_in_school(
         contact_matrix, school_years, 0, 4
     )
     np.isclose(n_contacts_teacher_student, (16.2*3 / len(school_years)), rtol=1e-6)
 
-    n_contacts_student_teacher = interaction.get_contacts_in_school(
+    n_contacts_student_teacher = interaction._get_contacts_in_school(
         contact_matrix, school_years, 4, 0
     )
     assert n_contacts_student_teacher == 0.81*3
@@ -93,8 +93,9 @@ def days_to_infection(interaction, susceptible_person, group, people, n_students
             group.subgroups[1].append(person)
         for person in people[n_students:]:
             group.subgroups[0].append(person)
+        interactive_group = InteractiveGroup(group)
         infected_ids = interaction.time_step_for_group(
-            group, delta_time
+            group=interactive_group, delta_time=delta_time
         )
         if infected_ids:
             break
@@ -147,18 +148,13 @@ def test__average_time_to_infect(n_teachers, mode):
         "xi": 1.0,
         "characteristic_time": 24,
     }
-    if mode == "average":
-        interaction = Interaction(
-            beta={"school": 1,},
-            alpha_physical=1,
-            contact_matrices={"school": contact_matrices},
-        )
-    elif mode == "sampling":
-        interaction = Interaction(
-            betas={"school": 1,}, alphas={"school": 1,}
-        )
+    interaction = Interaction(
+        beta={"school": 1,},
+        alpha_physical=1,
+        contact_matrices={"school": contact_matrices},
+    )
     n_days = []
-    for _ in range(1000):
+    for _ in range(100):
         people, school = create_school(n_students, n_teachers)
         for student in people[:n_students]:
             selector.infect_person_at_time(student, time=0)
@@ -169,8 +165,8 @@ def test__average_time_to_infect(n_teachers, mode):
         n_days.append(
             days_to_infection(interaction, teacher, school, people, n_students)
         )
-    teacher_teacher = interaction.selector.transmission_probability * (n_teachers - 1)
-    student_teacher = interaction.selector.transmission_probability / n_students
+    teacher_teacher = selector.transmission_probability * (n_teachers - 1)
+    student_teacher = selector.transmission_probability / n_students
     np.testing.assert_allclose(
         np.mean(n_days), 1.0 / (teacher_teacher + student_teacher), rtol=0.1,
     )

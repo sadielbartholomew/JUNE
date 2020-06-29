@@ -31,14 +31,14 @@ def get_contact_matrix(alpha, contacts, physical):
 
 @nb.jit(nopython=True)
 def compute_effective_transmission(
-        subgroup_transmission_probabilities: np.array,
-        susceptibles_group_idx: np.array,
-        infector_subgroups : tuple,
-        infector_subgroup_sizes: np.array,
-        contact_matrix: np.array,
-        delta_time: float,
-        beta: float,
-        school_years : np.array,
+    subgroup_transmission_probabilities: np.array,
+    susceptibles_group_idx: np.array,
+    infector_subgroups: tuple,
+    infector_subgroup_sizes: np.array,
+    contact_matrix: np.array,
+    delta_time: float,
+    beta: float,
+    school_years: np.array,
 ):
     """
     Computes the effective transmission probability of all the infected people in the group,
@@ -77,6 +77,18 @@ def infect_susceptibles(effective_transmission_probability, susceptible_ids):
 
 
 @nb.jit(nopython=True)
+def _get_contacts_in_school(
+    contact_matrix, school_years, susceptibles_idx, infecters_idx
+):
+    n_contacts = contact_matrix[
+        _translate_school_subgroup(susceptibles_idx, school_years)
+    ][_translate_school_subgroup(infecters_idx, school_years)]
+    if susceptibles_idx == 0 and infecters_idx > 0:
+        n_contacts /= len(school_years)
+    return n_contacts
+
+
+@nb.jit(nopython=True)
 def _subgroup_to_subgroup_transmission(
     contact_matrix,
     subgroup_transmission_probabilities,
@@ -86,13 +98,15 @@ def _subgroup_to_subgroup_transmission(
     school_years=None,
 ) -> float:
     if school_years is not None:
-        n_contacts = contact_matrix[
-            _translate_school_subgroup(susceptibles_idx, school_years)
-        ][_translate_school_subgroup(infecters_idx, school_years)]
-        if susceptibles_idx == 0 and infecters_idx > 0:
-            n_contacts /= len(school_years)
+        n_contacts = _get_contacts_in_school(
+            contact_matrix, school_years, susceptibles_idx, infecters_idx
+        )
     else:
         n_contacts = contact_matrix[susceptibles_idx][infecters_idx]
+    if susceptibles_idx == infecters_idx:
+        subgroup_size -= 1
+        if subgroup_size == 0:
+            return 0.0
     return n_contacts / subgroup_size * subgroup_transmission_probabilities
 
 
@@ -101,6 +115,7 @@ def _translate_school_subgroup(idx, school_years):
     if idx > 0:
         idx = school_years[idx - 1] + 1
     return idx
+
 
 class Interaction:
     def __init__(self, alpha_physical, beta, contact_matrices):
@@ -206,7 +221,7 @@ class Interaction:
                 contact_matrix=contact_matrix,
                 subgroup_transmission_probabilities=group.transmission_probabilities,
                 susceptible_ids=susceptible_ids,
-                infector_subgroups = group.subgroups_infector,
+                infector_subgroups=group.subgroups_infector,
                 infector_subgroup_sizes=group.infector_subgroup_sizes,
                 beta=beta,
                 delta_time=delta_time,
