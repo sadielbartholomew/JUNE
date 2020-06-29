@@ -11,6 +11,7 @@ test_config = paths.configs_path / "defaults/interaction/ContactInteraction.yaml
 
 
 def test__contact_matrices_from_default():
+    #interaction = Interaction.from_file(config_filename=test_config)
     interaction = Interaction.from_file(config_filename=test_config)
     np.testing.assert_allclose(
         interaction.contact_matrices["pub"],
