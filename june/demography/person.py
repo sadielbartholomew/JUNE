@@ -80,6 +80,13 @@ class Person(dataobject):
         return False
 
     @property
+    def infector(self):
+        try:
+            return self.health_information.infection.transmission.probability > 0
+        except:
+            return False
+
+    @property
     def recovered(self):
         return not (self.dead or self.susceptible or self.infected)
 
@@ -169,4 +176,5 @@ class Person(dataobject):
             if mate.lockdown_status in ["key_worker", "random"]:
                 return True
         return False
+
 

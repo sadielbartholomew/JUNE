@@ -70,8 +70,9 @@ def compute_effective_transmission(
 def infect_susceptibles(effective_transmission_probability, susceptible_ids):
     infected_ids = []
     for i in susceptible_ids:
-        if np.random.rand() < effective_transmission_probability:
-            infected_ids.append(i)
+        if not np.isnan(i):
+            if np.random.rand() < effective_transmission_probability:
+                infected_ids.append(i)
     return infected_ids
 
 
@@ -177,6 +178,8 @@ class Interaction:
         school_years = group.school_years
         infected_ids = []
         for i, susceptible_id_list in enumerate(group.susceptible_ids):
+            if susceptible_id_list[0] == np.nan:
+                continue
             infected_ids += self.time_step_for_subgroup(
                 contact_matrix=contact_matrix,
                 subgroup_transmission_probabilities=group.transmission_probabilities,
