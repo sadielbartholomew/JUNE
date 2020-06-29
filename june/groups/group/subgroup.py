@@ -34,7 +34,7 @@ class Subgroup:
 
     @property
     def infector(self):
-        return self._collate("infected")
+        return self._collate("infector")
 
     @property
     def susceptible(self):
