@@ -1,6 +1,7 @@
 import numpy as np
 import numba as nb
 
+
 class InteractiveGroup:
     """
     Extracts the necessary information about a group to perform an interaction time
@@ -11,6 +12,7 @@ class InteractiveGroup:
     ----------
     - group : group that we want to prepare for interaction.
     """
+
     def __init__(self, group):
         infector_ids = []
         trans_prob = []
@@ -22,31 +24,36 @@ class InteractiveGroup:
         self.has_infector = False
         for i, subgroup in enumerate(group.subgroups):
             subgroup_size = len(subgroup.people)
-            subgroup_infected = [person for person in subgroup if person.infected]
+            subgroup_infected = [
+                person
+                for person in subgroup
+                if person.health_information is not None
+                and person.health_information.infection.transmission.probability > 0
+            ]
             sus_ids = [person.id for person in subgroup.people if person.susceptible]
             if len(sus_ids) != 0:
                 self.has_susceptible = True
                 self.subgroups_susceptible.append(i)
                 susceptible_ids.append(np.array(sus_ids))
+
             inf_ids = [person.id for person in subgroup_infected]
             if len(inf_ids) != 0:
                 tprob = sum(
-                        person.health_information.infection.transmission.probability
-                        for person in subgroup_infected 
+                    person.health_information.infection.transmission.probability
+                    for person in subgroup_infected
                 )
-                if tprob != 0.0:
-                    self.has_infector = True
-                    self.subgroups_infector.append(i)
-                    trans_prob.append(tprob)
-                    infector_ids.append(np.array(inf_ids))
-                    infector_subgroup_sizes.append(subgroup_size)
-        
-        self.must_timestep = self.has_susceptible and self.has_infector 
+                self.has_infector = True
+                self.subgroups_infector.append(i)
+                trans_prob.append(tprob)
+                infector_ids.append(np.array(inf_ids))
+                infector_subgroup_sizes.append(subgroup_size)
+
+        self.must_timestep = self.has_susceptible and self.has_infector
         if self.must_timestep is False:
-            return 
+            return
         self.spec = group.spec
         self.infector_ids = tuple(infector_ids)
-        self.transmission_probabilities = np.array(trans_prob)
+        self.transmission_probabilities = tuple(trans_prob)
         self.susceptible_ids = tuple(susceptible_ids)
         self.subgroups_susceptible = tuple(self.subgroups_susceptible)
         self.subgroups_infector = tuple(self.subgroups_infector)
@@ -73,7 +80,7 @@ if __name__ == "__main__":
         if i % 2 == 0:
             selector.infect_person_at_time(p, 0)
             p.health_information.update_health_status(5, 5)
-    #household.clear()
+    # household.clear()
     t1 = time.time()
     for _ in range(300_000):
         interactive_group = InteractiveGroup(household)
