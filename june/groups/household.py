@@ -1,39 +1,19 @@
 from enum import IntEnum
 
-
-import numpy as np
-import random
-import h5py
-import time
-
-from june.groups.group import Group, Supergroup
-from enum import IntEnum
-from typing import List
-from recordclass import dataobject
+from june.groups import Group, Supergroup
 
 
 class Household(Group):
-    """
-    The Household class represents a household and contains information about 
-    its residents.
-    We assume four subgroups:
-    0 - kids
-    1 - young adults
-    2 - adults
-    3 - old adults
-    """
-
     __slots__ = (
         "area",
-        "type",
-        "max_size",
-        "n_residents",
+        "kid_max_age",
+        "young_adult_max_age",
+        "adult_max_age",
         "residents",
-        "relatives_in_care_homes",
-        "relatives_in_households",
-        "quarantine_starting_date",
-        "household_complacency",
-        "social_venues",
+        "n_kids",
+        "n_young_adults",
+        "n_adults",
+        "n_old_adults",
     )
 
     class SubgroupType(IntEnum):
@@ -42,48 +22,49 @@ class Household(Group):
         adults = 2
         old_adults = 3
 
-    def __init__(self, type=None, area=None, max_size=np.inf, household_complacency=np.random.rand()):
-        """
-        Type should be on of ["family", "student", "young_adults", "old", "other", "nokids", "ya_parents", "communal"].
-        Relatives is a list of people that are related to the family living in the household
-        """
+    def __init__(
+        self,
+        area=None,
+        n_kids=None,
+        n_young_adults=None,
+        n_adults=None,
+        n_old_adults=None,
+    ):
         super().__init__()
         self.area = area
-        self.type = type
-        self.quarantine_starting_date = None
-        self.household_complacency = household_complacency
-        self.relatives_in_care_homes = None
-        self.relatives_in_households = None
-        self.max_size = max_size
-        self.n_residents = 0
-        self.residents = tuple()
-        self.social_venues = {}
+        self.kid_max_age = 17
+        self.young_adult_max_age = 34
+        self.adult_max_age = 64
+        self.residents = ()
+        self.n_kids = n_kids
+        self.n_young_adults = n_young_adults
+        self.n_adults = n_adults
+        self.n_old_adults = n_old_adults
 
-    def add(self, person, subgroup_type=SubgroupType.adults, activity="residence"):
-        if activity == "leisure":
-            if person.age < 18:
-                subgroup = self.SubgroupType.kids
-            elif person.age <= 35:
-                subgroup = self.SubgroupType.young_adults
-            elif person.age < 65:
-                subgroup = self.SubgroupType.adults
-            else:
-                subgroup = self.SubgroupType.old_adults
-            person.subgroups.leisure = self[subgroup]
-            self[subgroup].append(person)
-        elif activity == "residence":
-            self[subgroup_type].append(person)
-            self.residents = tuple((*self.residents, person))
-            person.subgroups.residence = self[subgroup_type]
+    def add(self, person, activity="residence"):
+        if person.age <= self.kid_max_age:
+            subgroup = self.SubgroupType.kids
+        elif person.age <= self.young_adult_max_age:
+            subgroup = self.SubgroupType.young_adults
+        elif person.age <= self.adult_max_age:
+            subgroup = self.SubgroupType.adults
         else:
-            raise NotImplementedError(f"Activity {activity} not supported in household")
+            subgroup = self.SubgroupType.old_adults
+        self[subgroup].append(person)
+        if activity == "leisure":
+            person.subgroups.leisure = self[subgroup]
+        elif activity == "residence":
+            person.subgroups.residence = self[subgroup]
+            self.residents = tuple((*self.residents, person))
+        else:
+            raise ValueError("activity not supported")
 
     def get_leisure_subgroup(self, person):
-        if person.age < 18:
+        if person.age <= self.kid_max_age:
             return self.subgroups[self.SubgroupType.kids]
-        elif person.age <= 35:
+        elif person.age <= self.young_adult_max_age:
             return self.subgroups[self.SubgroupType.young_adults]
-        elif person.age < 65:
+        elif person.age <= self.adult_max_age:
             return self.subgroups[self.SubgroupType.adults]
         else:
             return self.subgroups[self.SubgroupType.old_adults]
@@ -104,37 +85,12 @@ class Household(Group):
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
 
-    def quarantine(self, time, quarantine_days, household_complacency):
-        if self.type == "communal":
-            return False
-        if self.quarantine_starting_date and self.household_complacency < household_complacency:
-            if (
-                self.quarantine_starting_date
-                < time
-                < self.quarantine_starting_date + quarantine_days
-            ):
-                return True
-        return False
+
+class HouseholdSingle(Household):
+    def __init__(self, area=None):
+        super().__init__(area=area)
 
 
 class Households(Supergroup):
-    """
-    Contains all households for the given area, and information about them.
-    """
-
-    def __init__(self, households: List[Household]):
-        super().__init__()
-        self.members = households
-
-    def __add__(self, households: "Households"):
-        """
-        Adding two households instances concatenates the members
-        list.
-
-        Parameters
-        ----------
-        households:
-            instance of Households to sum with.
-        """
-        self.members += households.members
-        return self
+    def __init__(self):
+        pass

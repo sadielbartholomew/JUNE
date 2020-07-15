@@ -1,4 +1,3 @@
-import copy
 import logging
 import random
 from datetime import datetime
@@ -69,7 +68,6 @@ class Simulator:
         """
         self.world = world
         self.interaction = interaction
-        self.beta_copy = copy.deepcopy(self.interaction.beta)
         self.infection_seed = infection_seed
         self.selector = selector
         self.policies = policies

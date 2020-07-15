@@ -1,27 +1,64 @@
 import pandas as pd
 import pytest
-from june.groups import Household, Households
+from june.groups.household import Household, HouseholdSingle #Households
 from june.demography import Person
 
-def test__households_adding():
-    household = Household()
-    household2 = Household()
-    household3 = Household()
-    households1 = Households([household])
-    households2 = Households([household2, household3])
-    households3 = households1 + households2
-    assert households3.members == [household, household2, household3]
+class TestHousehold:
+    def test__add_leisure(self):
+        household = Household(n_kids=1, n_young_adults=2, n_adults=3, n_old_adults=4)
+        assert household.n_kids == 1
+        assert household.n_young_adults == 2
+        assert household.n_adults == 3
+        assert household.n_old_adults == 4
+        p = Person.from_attributes(sex="f", age=8)
+        household.add(p, activity="leisure")
+        assert p not in household.residents
+        assert p in household.kids
+        p = Person.from_attributes(sex="f", age=18)
+        household.add(p, activity="leisure")
+        assert p in household.young_adults
+        assert p not in household.residents
+        p = Person.from_attributes(sex="f", age=48)
+        household.add(p, activity="leisure")
+        assert p in household.adults
+        assert p not in household.residents
+        p = Person.from_attributes(sex="f", age=78)
+        household.add(p, activity="leisure")
+        assert p in household.old_adults
+        assert p not in household.residents
+        assert household.size == 4
 
-def test__household_mates():
+    def test__add_resident(self):
+        household = Household()
+        p = Person.from_attributes(sex="f", age=8)
+        household.add(p, activity="residence")
+        assert p in household.residents
+        assert p in household.kids
+        p = Person.from_attributes(sex="f", age=18)
+        household.add(p, activity="residence")
+        assert p in household.young_adults
+        assert p in household.residents
+        p = Person.from_attributes(sex="f", age=48)
+        household.add(p, activity="residence")
+        assert p in household.adults
+        assert p in household.residents
+        p = Person.from_attributes(sex="f", age=78)
+        household.add(p, activity="residence")
+        assert p in household.old_adults
+        assert p in household.residents
 
-    house = Household()
-    person1 = Person.from_attributes()
-    house.add(person1, subgroup_type=house.SubgroupType.kids)
-    assert house.residents[0] == person1
-    person2 = Person.from_attributes()
-    person3 = Person.from_attributes()
-    house.add(person2)
-    house.add(person3)
-    assert person1 in person1.housemates
-    assert person2 in person1.housemates
-    assert person3 in person1.housemates
+
+class TestHouseholdSingle:
+    def test__household_single(self):
+        household = HouseholdSingle(area="test", n_young_adults=1)
+        assert household.area == "test"
+        assert household.n_young_adults == 1
+        household = HouseholdSingle(area="test", n_adults=1)
+        assert household.area == "test"
+        assert household.n_adults == 1
+        household = HouseholdSingle(area="test", n_old_adults=1)
+        assert household.area == "test"
+        assert household.n_old_adults == 1
+        household = HouseholdSingle(area="test", n_old_adults=1, n_adults=1)
+        assert household.area == "test"
+        assert household.n_old_adults == 1
