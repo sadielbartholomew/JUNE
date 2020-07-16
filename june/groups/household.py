@@ -1,6 +1,10 @@
 from enum import IntEnum
+import random
+from typing import List
+import numpy as np
 
 from june.groups import Group, Supergroup
+from june.demography import Person
 
 
 class Household(Group):
@@ -10,10 +14,7 @@ class Household(Group):
         "young_adult_max_age",
         "adult_max_age",
         "residents",
-        "n_kids",
-        "n_young_adults",
-        "n_adults",
-        "n_old_adults",
+        "max_size",
     )
 
     class SubgroupType(IntEnum):
@@ -23,12 +24,7 @@ class Household(Group):
         old_adults = 3
 
     def __init__(
-        self,
-        area=None,
-        n_kids=None,
-        n_young_adults=None,
-        n_adults=None,
-        n_old_adults=None,
+        self, area=None, max_size=np.inf,
     ):
         super().__init__()
         self.area = area
@@ -36,10 +32,7 @@ class Household(Group):
         self.young_adult_max_age = 34
         self.adult_max_age = 64
         self.residents = ()
-        self.n_kids = n_kids
-        self.n_young_adults = n_young_adults
-        self.n_adults = n_adults
-        self.n_old_adults = n_old_adults
+        self.max_size = max_size
 
     def add(self, person, activity="residence"):
         if person.age <= self.kid_max_age:
@@ -74,23 +67,69 @@ class Household(Group):
         return self.subgroups[self.SubgroupType.kids]
 
     @property
+    def n_kids(self):
+        return len(self.kids)
+
+    @property
     def young_adults(self):
         return self.subgroups[self.SubgroupType.young_adults]
+
+    @property
+    def n_young_adults(self):
+        return len(self.young_adults)
 
     @property
     def adults(self):
         return self.subgroups[self.SubgroupType.adults]
 
     @property
+    def n_adults(self):
+        return len(self.adults)
+
+    @property
     def old_adults(self):
         return self.subgroups[self.SubgroupType.old_adults]
+
+    @property
+    def n_old_adults(self):
+        return len(self.old_adults)
 
 
 class HouseholdSingle(Household):
     def __init__(self, area=None):
-        super().__init__(area=area)
+        super().__init__(area=area, max_size=1)
+
+
+class HouseholdCouple(Household):
+    def __init__(self, area=None):
+        super().__init__(area=area, max_size=2)
+
+
+class HouseholdFamily(Household):
+    def __init__(self, area=None, n_kids_min=0, max_size=np.inf):
+        super().__init__(area=area, max_size=max_size)
+        self.n_kids_min = n_kids_min
+
+
+class HouseholdStudent(Household):
+    def __init__(self, area=None, max_size=np.inf):
+        super().__init__(area=area, max_size=max_size)
+
+
+class HouseholdCommunal(Household):
+    def __init__(self, area=None, max_size=np.inf):
+        super().__init__(area=area, max_size=max_size)
+
+
+class HouseholdOther(Household):
+    def __init__(self, area=None, max_size=np.inf):
+        super().__init__(area=area, max_size=max_size)
 
 
 class Households(Supergroup):
-    def __init__(self):
-        pass
+    def __init__(self, households: List[Household]):
+        super().__init__()
+        self.members = households
+
+    @classmethod
+    def from_household_compositions(household_com

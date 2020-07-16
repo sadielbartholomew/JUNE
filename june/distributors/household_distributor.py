@@ -2,6 +2,7 @@ from collections import OrderedDict
 from collections import defaultdict
 from itertools import chain
 from typing import List
+import random
 import logging
 
 import numpy as np
@@ -45,11 +46,39 @@ default_logging_config_filename = (
 )
 
 
-"""
-This file contains routines to distribute people to households
-according to census data.
-"""
+class PersonFinder:
+    """
+    Finds a person in the area with the given characteristics if that person
+    has not been picked before (ie is not in a household)
+    """
+    def __init__(self, population: List[Person]):
+        self.population_dict = self._generate_population_dict(population)
 
+    def _generate_population_dict(self, population):
+        population_dict = {}
+        for ethnicity in "ABCDE":
+            population_dict[ethnicity] = {}
+            for sex in ['m', 'f']:
+                population_dict[ethnicity][sex] = {}
+                for age in np.arange(0,100):
+                    population_dict[ethnicity][sex][age] = []
+        for person in population:
+            population_dict[person.ethnicity][person.sex][person.age].append(person)
+        return population_dict
+
+    def __call__(self, age, sex, ethnicity=None):
+        if ethnicity is None:
+            ll = list("ABCDE")
+            random.shuffle(ll)
+            for ethn in ll:
+                if self.population_dict[ethn][sex][age]:
+                    return self.population_dict[ethn][sex][age].pop()
+            return None
+        else:
+            if self.population_dict[ethnicity][sex][age]:
+                return self.population_dict[ethnicity][sex][age].pop()
+            else:
+                return None
 
 class HouseholdError(BaseException):
     """ class for throwing household related errors """
