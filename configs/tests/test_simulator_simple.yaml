@@ -17,6 +17,7 @@ time:
   step_activities:
       weekday:
           0: ['hospital', 'leisure','residence'] 
+          0: ['hospital', 'commute','residence'] 
           1: ['hospital', 'primary_activity', 'residence']
       weekend:
           0: ['hospital', 'residence']
