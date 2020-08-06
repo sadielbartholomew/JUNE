@@ -28,7 +28,7 @@ def save_commute_cities_to_hdf5(commute_cities: CommuteCities, file_path: str):
         for city in commute_cities:
             ids.append(city.id)
             cities_names_list.append(city.city.encode("ascii", "ignore"))
-            if len(city.commutehubs) == 0:
+            if len(city.commutehubs) == 0:  # not city.commutehubs.size:
                 hubs = np.array([-999, -999], dtype=np.int)
             else:
                 hubs = np.array([hub.id for hub in city.commutehubs], dtype=np.int)
